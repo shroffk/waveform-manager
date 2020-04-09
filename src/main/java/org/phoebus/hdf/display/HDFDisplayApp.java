@@ -10,18 +10,23 @@ import java.util.logging.Logger;
 public class HDFDisplayApp implements AppResourceDescriptor {
 
     static final Logger logger = Logger.getLogger(HDFDisplayApp.class.getName());
+
+    static final String HDF_EXTENSION = "h5";
+    static final List<String> SupportedExtensions = List.of(HDF_EXTENSION);
+
     public static final String NAME = "hdf_display";
     public static final String DISPLAYNAME = "HDF Display View";
 
 
     @Override
     public void start() {
-
+        // Load the preferences and configure the dll path
+        System.setProperty("java.library.path", HDFDisplayPreferences.hdf_lib_path);
     }
 
     @Override
     public List<String> supportedFileExtentions() {
-        return null;
+        return SupportedExtensions;
     }
 
     @Override
@@ -31,12 +36,12 @@ public class HDFDisplayApp implements AppResourceDescriptor {
 
     @Override
     public String getName() {
-        return null;
+        return NAME;
     }
 
     @Override
     public String getDisplayName() {
-        return null;
+        return DISPLAYNAME;
     }
 
 
