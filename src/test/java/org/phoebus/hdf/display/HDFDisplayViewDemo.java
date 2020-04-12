@@ -16,18 +16,17 @@ public class HDFDisplayViewDemo extends ApplicationWrapper {
     public static void main(String[] args) {
         launch(HDFDisplayViewDemo.class, args);
     }
-    //-Djava.library.path=C:\hdf5\hdf-app\lib\hdfviewer
-    private static String FILE = "C:\\hdf5\\PS-20200131-11%3A43%3A08.391806.h5";
+
+    //TODO need to make a reasonably sized test file and include it in the test resources
+    private static String FILE = "C:\\hdf5\\Test.h5";
 
     @Override
     public void start(Stage stage) throws Exception {
 
         // Load the preferences and configure the dll path
-        String dllPath = "C:\\hdf5\\hdf-app\\lib\\hdfviewer";
-//        System.setProperty("java.library.path", dllPath);
+        String dllPath = (HDFDisplayPreferences.hdf_lib_path);
 
-        System.out.println("SET Property...............");
-//        addLibraryPath(dllPath);
+        addLibraryPath(dllPath);
 
         FXMLLoader loader = new FXMLLoader();
         loader.setLocation(this.getClass().getResource("HDFDisplay.fxml"));
