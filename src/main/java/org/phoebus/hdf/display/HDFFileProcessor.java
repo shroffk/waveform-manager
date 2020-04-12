@@ -26,12 +26,6 @@ public class HDFFileProcessor {
 
         TreeItem treeRoot = new TreeItem(new HDFDisplayTreeNode(false, file.getName(), null, null));
 
-        //addLibraryPath(Paths.get(HDFDisplayPreferences.hdf_lib_path).toString());
-        //Open file
-        System.out.println("Loading file.........");
-//        System.load(Paths.get(HDFDisplayPreferences.hdf_lib_path).toString());
-        System.out.println(HDFFileProcessor.class.getClassLoader());
-
         final H5File h5file = new H5File(file.getAbsolutePath(), FileFormat.READ);
         long file_id = -1;
         file_id = h5file.open();
@@ -84,7 +78,7 @@ public class HDFFileProcessor {
     }
 
 
-    private static class HDFDisplayTreeNode {
+    static class HDFDisplayTreeNode {
 
         private final boolean isLeaf;
         private final String name;
@@ -92,7 +86,7 @@ public class HDFFileProcessor {
 
         private final H5ScalarDS data;
 
-        private SimpleBooleanProperty plotted;
+        private SimpleBooleanProperty plotted = new SimpleBooleanProperty(false);
 
         private HDFDisplayTreeNode(boolean isLeaf, String name, String timestamp, H5ScalarDS data) {
             this.isLeaf = isLeaf;
