@@ -11,8 +11,10 @@ import java.io.IOException;
 public class HDFDisplay implements AppInstance {
 
     private DockItem tab;
+    private final AppDescriptor app;
 
-    public HDFDisplay() {
+    public HDFDisplay(AppDescriptor app) {
+        this.app = app;
         try {
             FXMLLoader loader = new FXMLLoader();
             loader.setLocation(this.getClass().getResource("HDFDisplay.fxml"));
@@ -27,6 +29,6 @@ public class HDFDisplay implements AppInstance {
 
     @Override
     public AppDescriptor getAppDescriptor() {
-        return null;
+        return app;
     }
 }
