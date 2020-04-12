@@ -1,11 +1,19 @@
 package org.phoebus.hdf.display;
 
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableObjectValue;
+import javafx.beans.value.ObservableValue;
+import javafx.beans.value.ObservableValueBase;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeTableCell;
+import javafx.scene.control.TreeTableColumn;
+import javafx.scene.control.TreeTableView;
 import javafx.scene.control.TreeView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
@@ -16,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 
 import static org.phoebus.hdf.display.HDFFileProcessor.HDFDisplayTreeNode;
+
 public class HDFDisplayController {
 
     // Plot
@@ -24,7 +33,13 @@ public class HDFDisplayController {
     TextField filter;
 
     @FXML
-    TreeView<HDFDisplayTreeNode> treeView;
+    TreeTableView<HDFDisplayTreeNode> treeTableView;
+    @FXML
+    TreeTableColumn name;
+    @FXML
+    TreeTableColumn plot;
+    @FXML
+    TreeTableColumn timeStamp;
 
     // HDF file
     private File file;
@@ -36,24 +51,54 @@ public class HDFDisplayController {
         final FXMLLoader loader = new FXMLLoader();
         loader.setLocation(this.getClass().getResource("HDFTreeCell.fxml"));
 
-        treeView.setCellFactory( (treeView) -> {
+        name.setCellValueFactory(
+                (Callback<TreeTableColumn.CellDataFeatures<HDFDisplayTreeNode, HDFDisplayTreeNode>, ObservableValue<HDFDisplayTreeNode>>) p ->
+                        new SimpleObjectProperty<HDFDisplayTreeNode>(p.getValue().getValue()));
 
-            return new TreeCell<>(){
-                @Override
-                protected void updateItem(HDFDisplayTreeNode item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if(empty) {
-                        setGraphic(null);
-                    } else {
-                        try {
-                            setGraphic(new HDFCell(item));
-                        } catch (IOException e) {
-                            setGraphic(new Label(e.getMessage()));
+        name.setCellFactory(new Callback<TreeTableColumn, TreeTableCell>() {
+            @Override
+            public TreeTableCell call(TreeTableColumn param) {
+                return new TreeTableCell<HDFDisplayTreeNode, HDFDisplayTreeNode>() {
+
+                    @Override
+                    protected void updateItem(HDFDisplayTreeNode item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty) {
+                            setGraphic(null);
+                        } else {
+                            setText(item.getName());
                         }
                     }
-                }
-            };
+                };
+            }
         });
+
+        plot.setCellValueFactory(
+                (Callback<TreeTableColumn.CellDataFeatures<HDFDisplayTreeNode, HDFDisplayTreeNode>, ObservableValue<HDFDisplayTreeNode>>) p ->
+                        new SimpleObjectProperty<HDFDisplayTreeNode>(p.getValue().getValue()));
+        plot.setCellFactory(new Callback<TreeTableColumn, TreeTableCell>() {
+            @Override
+            public TreeTableCell call(TreeTableColumn param) {
+                return new TreeTableCell<HDFDisplayTreeNode, HDFDisplayTreeNode>() {
+
+                    @Override
+                    protected void updateItem(HDFDisplayTreeNode item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty) {
+                            setGraphic(null);
+                        } else {
+                            if(item.isLeaf()){
+                                CheckBox checkBox = new CheckBox();
+                                checkBox.selectedProperty().bindBidirectional(item.isPlotted());
+                                setGraphic(checkBox);
+                            }
+                        }
+                    }
+                };
+            }
+        });
+
+
         constructTree();
     }
 
@@ -65,7 +110,7 @@ public class HDFDisplayController {
     public void constructTree() {
         try {
             TreeItem root = HDFFileProcessor.processFile(this.file);
-            treeView.setRoot(root);
+            treeTableView.setRoot(root);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -79,8 +124,10 @@ public class HDFDisplayController {
             fxmlLoader.load();
 
             HDFTreeCellController controller = fxmlLoader.getController();
-            controller.checkBox.setText(item.getName());
-            controller.checkBox.selectedProperty().bindBidirectional(item.isPlotted());
+            if (item != null) {
+                controller.checkBox.setText(item.getName());
+                controller.checkBox.selectedProperty().bindBidirectional(item.isPlotted());
+            }
         }
 
     }
