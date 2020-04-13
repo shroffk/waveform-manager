@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static org.phoebus.hdf.display.HDFFileProcessor.HDFDisplayTreeNode;
@@ -106,7 +107,11 @@ public class HDFDisplayController {
                                 checkBox.selectedProperty().bindBidirectional(item.isPlotted());
 
                                 item.isPlotted().addListener((observable, oldValue, newValue) -> {
-                                    addToPlot(item);
+                                    if (newValue.booleanValue()) {
+                                        addToPlot(item);
+                                    } else {
+                                        remoteFromPlot(item);
+                                    }
                                 });
                                 setGraphic(checkBox);
                             }
@@ -131,8 +136,9 @@ public class HDFDisplayController {
 
     }
 
+
     // A list of traces mapped to the associated selected pv's in the tree
-    private final Map<String, Trace> traces = new HashMap<>();
+    private final Map<String, Trace> traces = new ConcurrentHashMap<>();
     final RGBFactory colors = new RGBFactory();
 
     public synchronized void addToPlot(HDFDisplayTreeNode item) {
@@ -155,6 +161,13 @@ public class HDFDisplayController {
             }
         }
     }
+
+    private void remoteFromPlot(HDFDisplayTreeNode item) {
+        if(traces.containsKey(item.getName())){
+            rtTimePlot.removeTrace(traces.remove(item.getName()));
+        }
+    }
+
 
     public void setFile(File file) {
         this.file = file;
