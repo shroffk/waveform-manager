@@ -63,8 +63,11 @@ public class HDFFileProcessor {
                                     // create a data object with the pv specific data
                                     H5ScalarDS pvData = new H5ScalarDS(h5file, groupName, WFDATA);
                                     long[] selectedDims = pvData.getSelectedDims();
-                                    selectedDims[0] = i;
+                                    selectedDims[0] = 1;
                                     selectedDims[1] = pvData.getDims()[1];
+                                    long[] startDims2 = pvData.getStartDims();
+                                    startDims2[0] = i;
+                                    startDims2[1] = 0;
                                     groupItem.getChildren().add(new TreeItem<>(
                                             new HDFDisplayTreeNode(true, names[i], timestamps[i], pvData)
                                     ));
