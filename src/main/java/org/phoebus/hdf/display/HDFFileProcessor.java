@@ -13,6 +13,11 @@ import javafx.scene.control.TreeItem;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
 import static org.phoebus.hdf.display.HDFDisplayApp.logger;
@@ -56,8 +61,7 @@ public class HDFFileProcessor {
 
                                 for (int i=0; i < names.length; i++) {
                                     // create a data object with the pv specific data
-                                    H5ScalarDS pvData = new H5ScalarDS(h5file, groupName,
-                                            WFDATA);
+                                    H5ScalarDS pvData = new H5ScalarDS(h5file, groupName, WFDATA);
                                     long[] selectedDims = pvData.getSelectedDims();
                                     selectedDims[0] = i;
                                     selectedDims[1] = pvData.getDims()[1];
@@ -79,6 +83,7 @@ public class HDFFileProcessor {
 
 
     static class HDFDisplayTreeNode {
+        private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd-HH:mm:ss.nnnnnn");
 
         private final boolean isLeaf;
         private final String name;
@@ -109,6 +114,10 @@ public class HDFFileProcessor {
 
         public String getTimestamp() {
             return timestamp;
+        }
+
+        public Instant getInstant() {
+            return LocalDateTime.parse(this.timestamp, formatter).atZone(ZoneId.systemDefault()).toInstant();
         }
 
         public H5ScalarDS getData() {
