@@ -1,33 +1,45 @@
 package org.phoebus.hdf.display;
 
+import hdf.object.h5.H5ScalarDS;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableValue;
-import javafx.beans.value.ObservableValueBase;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
-import javafx.scene.control.TreeView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
 import javafx.util.Callback;
+import org.csstudio.javafx.rtplot.LineStyle;
+import org.csstudio.javafx.rtplot.PointType;
+import org.csstudio.javafx.rtplot.RTTimePlot;
+import org.csstudio.javafx.rtplot.Trace;
+import org.csstudio.javafx.rtplot.TraceType;
+import org.csstudio.javafx.rtplot.data.ArrayPlotDataProvider;
+import org.csstudio.javafx.rtplot.data.SimpleDataItem;
+import org.csstudio.javafx.rtplot.util.RGBFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.phoebus.hdf.display.HDFFileProcessor.HDFDisplayTreeNode;
 
 public class HDFDisplayController {
 
     // Plot
+    @FXML
+    AnchorPane plotArea;
+    @FXML
+    final RTTimePlot rtTimePlot = new RTTimePlot(true);
 
     @FXML
     TextField filter;
@@ -52,8 +64,10 @@ public class HDFDisplayController {
         loader.setLocation(this.getClass().getResource("HDFTreeCell.fxml"));
 
         name.setCellValueFactory(
-                (Callback<TreeTableColumn.CellDataFeatures<HDFDisplayTreeNode, HDFDisplayTreeNode>, ObservableValue<HDFDisplayTreeNode>>) p ->
-                        new SimpleObjectProperty<HDFDisplayTreeNode>(p.getValue().getValue()));
+                (Callback<TreeTableColumn.CellDataFeatures<HDFDisplayTreeNode, HDFDisplayTreeNode>, ObservableValue<HDFDisplayTreeNode>>) p -> {
+                    return new SimpleObjectProperty<HDFDisplayTreeNode>(p.getValue().getValue());
+                });
+
 
         name.setCellFactory(new Callback<TreeTableColumn, TreeTableCell>() {
             @Override
@@ -90,6 +104,10 @@ public class HDFDisplayController {
                             if(item.isLeaf()){
                                 CheckBox checkBox = new CheckBox();
                                 checkBox.selectedProperty().bindBidirectional(item.isPlotted());
+
+                                item.isPlotted().addListener((observable, oldValue, newValue) -> {
+                                    addToPlot(item);
+                                });
                                 setGraphic(checkBox);
                             }
                         }
@@ -97,9 +115,45 @@ public class HDFDisplayController {
                 };
             }
         });
-
-
         constructTree();
+
+
+        rtTimePlot.setUpdateThrottle(200, TimeUnit.MILLISECONDS);
+
+        rtTimePlot.getXAxis().setGridVisible(true);
+
+        plotArea.getChildren().add(rtTimePlot);
+        // anchor to the button
+        plotArea.setTopAnchor(rtTimePlot, 0.0);
+        plotArea.setLeftAnchor(rtTimePlot, 0.0);
+        plotArea.setRightAnchor(rtTimePlot, 0.0);
+        plotArea.setBottomAnchor(rtTimePlot, 0.0);
+
+    }
+
+    // A list of traces mapped to the associated selected pv's in the tree
+    private final Map<String, Trace> traces = new HashMap<>();
+    final RGBFactory colors = new RGBFactory();
+
+    public synchronized void addToPlot(HDFDisplayTreeNode item) {
+        if(!traces.containsKey(item.getName())){
+            try {
+                final ArrayPlotDataProvider<Instant> data = new ArrayPlotDataProvider<>();
+                H5ScalarDS rawData = item.getData();
+                rawData.open();
+
+                float[] d1 = (float[]) rawData.getData();
+                for (int i = 0; i < d1.length; i++) {
+                    data.add(new SimpleDataItem<>(item.getInstant().plusMillis(i*1), d1[i]));
+                }
+                traces.put(item.getName(),
+                        rtTimePlot.addTrace(item.getName(), "socks", data, colors.next(), TraceType.LINES, 3, LineStyle.SOLID, PointType.NONE, 3, 0));
+                rtTimePlot.requestUpdate();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void setFile(File file) {
