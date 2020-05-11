@@ -4,3 +4,6 @@
 /.project
 *.idea
 *.iml
+/target/
+.classpath
+*/.classpath*
