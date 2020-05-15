@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 @SpringBootApplication
 @ComponentScan(basePackages = { "org.phoebus" })
 public class WaveformIndexService {
+
      /**
      * Alarm system logger
      */
