@@ -3,12 +3,20 @@ package org.phoebus.services.waveform.index.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WaveformFilePVProperties {
-    private String name = "pvProperties";
+public class WaveformFilePVProperty {
+    private String pvname;
     private List<WaveformFileAttribute> attributes = new ArrayList<>();
 
-    public String getName() {
-        return name;
+    public WaveformFilePVProperty(String pvname) {
+        this.pvname = pvname;
+    }
+
+    public String getPvname() {
+        return pvname;
+    }
+
+    public void setPvname(String pvname) {
+        this.pvname = pvname;
     }
 
     public List<WaveformFileAttribute> getAttributes() {
