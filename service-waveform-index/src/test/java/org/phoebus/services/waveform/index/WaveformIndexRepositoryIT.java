@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 import org.phoebus.services.waveform.index.entity.WaveformFileAttribute;
 import org.phoebus.services.waveform.index.entity.WaveformFilePVProperty;
 import org.phoebus.services.waveform.index.entity.WaveformFileProperty;
+import org.phoebus.services.waveform.index.entity.WaveformFileTag;
 import org.phoebus.services.waveform.index.entity.WaveformIndex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -62,6 +63,20 @@ public class WaveformIndexRepositoryIT {
             }
         });
 
+        /*
+         * Create a waveform index with a tag
+         */
+        WaveformFileTag fileTag = new WaveformFileTag("tag");
+        index.setTags(List.of(fileTag));
+        createdIndex = waveformIndexRepository.save(index);
+
+        Assert.assertThat(createdIndex, new CustomTypeSafeMatcher<WaveformIndex>("Expected Index to be created with tag ") {
+            @Override
+            protected boolean matchesSafely(WaveformIndex item) {
+                return item.getFile().equals(file.toURI())
+                        && item.getTags().contains(fileTag);
+            }
+        });
 
         /*
          * Create a waveform index with pv properties

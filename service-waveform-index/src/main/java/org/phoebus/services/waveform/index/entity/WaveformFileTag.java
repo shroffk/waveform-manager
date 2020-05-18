@@ -5,6 +5,10 @@ import java.util.Objects;
 public class WaveformFileTag {
     private String name;
 
+    WaveformFileTag() {
+
+    }
+    
     public WaveformFileTag(String name) {
         this.name = name;
     }
