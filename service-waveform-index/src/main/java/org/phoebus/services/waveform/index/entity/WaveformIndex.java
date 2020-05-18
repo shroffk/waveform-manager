@@ -45,6 +45,10 @@ public class WaveformIndex {
         this.tags = tags;
     }
 
+    public void addTag(WaveformFileTag tag) {
+        this.tags.add(tag);
+    }
+
     public List<WaveformFileProperty> getProperties() {
         return properties;
     }
@@ -53,7 +57,7 @@ public class WaveformIndex {
         this.properties = properties;
     }
 
-    public void addProperties(WaveformFileProperty property) {
+    public void addProperty(WaveformFileProperty property) {
         this.properties.add(property);
     }
 
@@ -65,7 +69,7 @@ public class WaveformIndex {
         this.pvProperties = pvProperties;
     }
 
-    public void addPvProperties(WaveformFilePVProperty pvProperty) {
+    public void addPvProperty(WaveformFilePVProperty pvProperty) {
         this.pvProperties.add(pvProperty);
     }
 }

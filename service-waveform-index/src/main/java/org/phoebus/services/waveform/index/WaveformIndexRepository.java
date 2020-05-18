@@ -6,6 +6,9 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.support.WriteRequest;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.bytes.BytesReference;
@@ -66,14 +69,68 @@ public class WaveformIndexRepository {
     }
 
     public WaveformIndex addTag(WaveformIndex entity, WaveformFileTag tag) {
+        try {
+            entity.addTag(tag);
+            UpdateRequest updateRequest = new UpdateRequest(ES_WF_INDEX, ES_WF_TYPE, entity.getFile().toString());
+            IndexRequest indexRequest = new IndexRequest(ES_WF_INDEX, ES_WF_TYPE, entity.getFile().toString())
+                                                .source(mapper.writeValueAsBytes(entity), XContentType.JSON);
+            updateRequest.doc(mapper.writeValueAsBytes(entity), XContentType.JSON).upsert(indexRequest);
+            updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+            UpdateResponse response = client.update(updateRequest, RequestOptions.DEFAULT);
+            if (response.getResult().equals(Result.CREATED) ||
+                response.getResult().equals(Result.UPDATED)) {
+                BytesReference ref = client.get(new GetRequest(ES_WF_INDEX, ES_WF_TYPE, response.getId()),
+                        RequestOptions.DEFAULT).getSourceAsBytesRef();
+                WaveformIndex responseIndex = mapper.readValue(ref.streamInput(), WaveformIndex.class);
+                return responseIndex;
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, e.getMessage(), e);
+        }
         return null;
     }
 
-    public WaveformIndex addProperty(WaveformIndex entity, WaveformFileProperty tag) {
+    public WaveformIndex addProperty(WaveformIndex entity, WaveformFileProperty property) {
+        try {
+            entity.addProperty(property);
+            UpdateRequest updateRequest = new UpdateRequest(ES_WF_INDEX, ES_WF_TYPE, entity.getFile().toString());
+            IndexRequest indexRequest = new IndexRequest(ES_WF_INDEX, ES_WF_TYPE, entity.getFile().toString())
+                    .source(mapper.writeValueAsBytes(entity), XContentType.JSON);
+            updateRequest.doc(mapper.writeValueAsBytes(entity), XContentType.JSON).upsert(indexRequest);
+            updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+            UpdateResponse response = client.update(updateRequest, RequestOptions.DEFAULT);
+            if (response.getResult().equals(Result.CREATED) ||
+                    response.getResult().equals(Result.UPDATED)) {
+                BytesReference ref = client.get(new GetRequest(ES_WF_INDEX, ES_WF_TYPE, response.getId()),
+                        RequestOptions.DEFAULT).getSourceAsBytesRef();
+                WaveformIndex responseIndex = mapper.readValue(ref.streamInput(), WaveformIndex.class);
+                return responseIndex;
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, e.getMessage(), e);
+        }
         return null;
     }
 
-    public WaveformIndex addPvProperty(WaveformIndex entity, WaveformFilePVProperty tag) {
+    public WaveformIndex addPvProperty(WaveformIndex entity, WaveformFilePVProperty pvProperty) {
+        try {
+            entity.addPvProperty(pvProperty);
+            UpdateRequest updateRequest = new UpdateRequest(ES_WF_INDEX, ES_WF_TYPE, entity.getFile().toString());
+            IndexRequest indexRequest = new IndexRequest(ES_WF_INDEX, ES_WF_TYPE, entity.getFile().toString())
+                    .source(mapper.writeValueAsBytes(entity), XContentType.JSON);
+            updateRequest.doc(mapper.writeValueAsBytes(entity), XContentType.JSON).upsert(indexRequest);
+            updateRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
+            UpdateResponse response = client.update(updateRequest, RequestOptions.DEFAULT);
+            if (response.getResult().equals(Result.CREATED) ||
+                    response.getResult().equals(Result.UPDATED)) {
+                BytesReference ref = client.get(new GetRequest(ES_WF_INDEX, ES_WF_TYPE, response.getId()),
+                        RequestOptions.DEFAULT).getSourceAsBytesRef();
+                WaveformIndex responseIndex = mapper.readValue(ref.streamInput(), WaveformIndex.class);
+                return responseIndex;
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, e.getMessage(), e);
+        }
         return null;
     }
 
