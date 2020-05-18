@@ -14,9 +14,16 @@ public class WaveformIndex {
     // The list of tags
     private List<WaveformFileTag> tags = Collections.emptyList();
     // The list of properties
-    private List<WaveformFileProperties> properties = Collections.emptyList();
+    private List<WaveformFileProperty> properties = Collections.emptyList();
     // The list of pv properties
-    private List<WaveformFilePVProperties> pvProperties = Collections.emptyList();
+    private List<WaveformFilePVProperty> pvProperties = Collections.emptyList();
+
+    /**
+     * Default constructor for Object Mapping
+     */
+    WaveformIndex() {
+
+    }
 
     public WaveformIndex(URI file) {
         this.file = file;
@@ -38,27 +45,27 @@ public class WaveformIndex {
         this.tags = tags;
     }
 
-    public List<WaveformFileProperties> getProperties() {
+    public List<WaveformFileProperty> getProperties() {
         return properties;
     }
 
-    public void setProperties(List<WaveformFileProperties> properties) {
+    public void setProperties(List<WaveformFileProperty> properties) {
         this.properties = properties;
     }
 
-    public void addProperties(WaveformFileProperties property) {
+    public void addProperties(WaveformFileProperty property) {
         this.properties.add(property);
     }
 
-    public List<WaveformFilePVProperties> getPvProperties() {
+    public List<WaveformFilePVProperty> getPvProperties() {
         return pvProperties;
     }
 
-    public void setPvProperties(List<WaveformFilePVProperties> pvProperties) {
+    public void setPvProperties(List<WaveformFilePVProperty> pvProperties) {
         this.pvProperties = pvProperties;
     }
 
-    public void addPvProperties(WaveformFilePVProperties pvProperty) {
+    public void addPvProperties(WaveformFilePVProperty pvProperty) {
         this.pvProperties.add(pvProperty);
     }
 }

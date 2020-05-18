@@ -2,8 +2,9 @@ package org.phoebus.services.waveform.index.entity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-public class WaveformFileProperties {
+public class WaveformFileProperty {
     private String name;
     private List<WaveformFileAttribute> attributes = new ArrayList<>();
 
@@ -29,5 +30,19 @@ public class WaveformFileProperties {
 
     public void removeAttribute(WaveformFileAttribute attribute) {
         this.attributes.remove(attribute);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof WaveformFileProperty)) return false;
+        WaveformFileProperty that = (WaveformFileProperty) o;
+        return name.equals(that.name) &&
+                attributes.equals(that.attributes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, attributes);
     }
 }

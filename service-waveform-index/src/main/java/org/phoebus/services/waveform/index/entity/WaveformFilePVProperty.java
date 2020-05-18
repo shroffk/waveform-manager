@@ -2,21 +2,26 @@ package org.phoebus.services.waveform.index.entity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class WaveformFilePVProperty {
-    private String pvname;
+    private String pvName;
     private List<WaveformFileAttribute> attributes = new ArrayList<>();
 
+    WaveformFilePVProperty() {
+
+    }
+
     public WaveformFilePVProperty(String pvname) {
-        this.pvname = pvname;
+        this.pvName = pvname;
     }
 
-    public String getPvname() {
-        return pvname;
+    public String getPvName() {
+        return pvName;
     }
 
-    public void setPvname(String pvname) {
-        this.pvname = pvname;
+    public void setPvName(String pvname) {
+        this.pvName = pvname;
     }
 
     public List<WaveformFileAttribute> getAttributes() {
@@ -33,5 +38,19 @@ public class WaveformFilePVProperty {
 
     public void removeAttribute(WaveformFileAttribute attribute) {
         this.attributes.remove(attribute);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof WaveformFilePVProperty)) return false;
+        WaveformFilePVProperty that = (WaveformFilePVProperty) o;
+        return pvName.equals(that.pvName) &&
+                attributes.equals(that.attributes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pvName, attributes);
     }
 }
