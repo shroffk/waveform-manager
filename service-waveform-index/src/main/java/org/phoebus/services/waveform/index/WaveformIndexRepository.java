@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 import org.elasticsearch.action.DocWriteResponse.Result;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -83,6 +84,15 @@ public class WaveformIndexRepository {
             logger.log(Level.SEVERE, e.getMessage(), e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find index for file: " + fileURI, e);
         }
+    }
+
+    /**
+     * Search for waveformIndex's
+     * @param allRequestParams
+     * @return list of {@link WaveformIndex}s which match the search parameters
+     */
+    public List<WaveformIndex> search(MultiValueMap<String, String> allRequestParams) {
+        return null;
     }
 
     /**
@@ -211,4 +221,5 @@ public class WaveformIndexRepository {
     public List<WaveformIndex> findAll() {
         return null;
     }
+
 }
