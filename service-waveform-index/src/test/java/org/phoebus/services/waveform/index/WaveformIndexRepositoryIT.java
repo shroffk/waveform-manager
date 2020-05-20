@@ -48,8 +48,7 @@ public class WaveformIndexRepositoryIT {
         /*
          * Create a waveform index with a property
          */
-        WaveformFileProperty fileProperty = new WaveformFileProperty();
-        fileProperty.setName("propertyName");
+        WaveformFileProperty fileProperty = new WaveformFileProperty("propertyName");
         fileProperty.setAttributes(List.of(new WaveformFileAttribute("attribute1", "value"),
                 new WaveformFileAttribute("attribute2", "value")));
         index.setProperties(List.of(fileProperty));
@@ -123,8 +122,7 @@ public class WaveformIndexRepositoryIT {
         WaveformIndex index = new WaveformIndex(file.toURI());
         WaveformIndex createdIndex = waveformIndexRepository.save(index);
 
-        WaveformFileProperty fileProperty = new WaveformFileProperty();
-        fileProperty.setName("addPropertyName");
+        WaveformFileProperty fileProperty = new WaveformFileProperty("addPropertyName");
         fileProperty.setAttributes(List.of(new WaveformFileAttribute("attribute1", "value"),
                                            new WaveformFileAttribute("attribute2", "value")));
         WaveformIndex updatedIndex = waveformIndexRepository.addProperty(createdIndex, fileProperty);

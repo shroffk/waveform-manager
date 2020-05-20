@@ -8,6 +8,13 @@ public class WaveformFileProperty {
     private String name;
     private List<WaveformFileAttribute> attributes = new ArrayList<>();
 
+    WaveformFileProperty() {
+    }
+
+    public WaveformFileProperty(String name) {
+        this.name = name;
+    }
+
     public String getName() {
         return name;
     }

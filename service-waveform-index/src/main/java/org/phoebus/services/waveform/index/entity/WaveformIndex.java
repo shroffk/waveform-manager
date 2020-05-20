@@ -25,6 +25,10 @@ public class WaveformIndex {
 
     }
 
+    public WaveformIndex(String fileURI) {
+        this.file = URI.create(fileURI);
+    }
+
     public WaveformIndex(URI file) {
         this.file = file;
     }

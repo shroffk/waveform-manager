@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.WriteRequest;
@@ -21,11 +22,14 @@ import org.phoebus.services.waveform.index.entity.WaveformIndex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 import org.elasticsearch.action.DocWriteResponse.Result;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 
 import static org.phoebus.services.waveform.index.WaveformIndexService.*;
@@ -46,9 +50,45 @@ public class WaveformIndexRepository {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     /**
+     * Find the waveformIndex identified by fileURI
+     * @param fileURI
+     * @return Optional Index if found, empty Optional if nothing is found.
+     */
+    public Optional<WaveformIndex> get(String fileURI) {
+        try {
+            GetResponse result = client.get(new GetRequest(ES_WF_INDEX, ES_WF_TYPE, fileURI),
+                    RequestOptions.DEFAULT);
+            if (result.isExists())
+            {
+                return Optional.of(mapper.readValue(result.getSourceAsBytesRef().streamInput(), WaveformIndex.class));
+            } else
+            {
+                return Optional.empty();
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, e.getMessage(), e);
+        }
+        return null;
+    }
+
+    /**
+     * Checkif the the waveformIndex identified by fileURI exists
+     * @param fileURI
+     * @return true if the Index for fileURI exists
+     */
+    public boolean checkExists(String fileURI) {
+        try {
+            return client.exists(new GetRequest(ES_WF_INDEX, ES_WF_TYPE, fileURI), RequestOptions.DEFAULT);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to find index for file: " + fileURI, e);
+        }
+    }
+
+    /**
      * Create a WaveformIndex
-     * @param entity
-     * @return
+     * @param entity the {@link WaveformIndex} to be created
+     * @return the created Index
      */
     public WaveformIndex save(WaveformIndex entity) {
         try {
@@ -59,8 +99,7 @@ public class WaveformIndexRepository {
                 response.getResult().equals(Result.UPDATED)) {
                 BytesReference ref = client.get(new GetRequest(ES_WF_INDEX, ES_WF_TYPE, response.getId()),
                         RequestOptions.DEFAULT).getSourceAsBytesRef();
-                WaveformIndex createdWaveformIndex = mapper.readValue(ref.streamInput(), WaveformIndex.class);
-                return createdWaveformIndex;
+                return mapper.readValue(ref.streamInput(), WaveformIndex.class);
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
@@ -134,6 +173,10 @@ public class WaveformIndexRepository {
         return null;
     }
 
+    /**
+     * Delete the waveformIndex, if it exists
+     * @param waveformIndex the index to be deleted
+     */
     public void delete(WaveformIndex waveformIndex) {
 
         try {
@@ -141,6 +184,21 @@ public class WaveformIndexRepository {
                     new DeleteRequest(ES_WF_INDEX, ES_WF_TYPE, waveformIndex.getFile().toString()), RequestOptions.DEFAULT);
         } catch (DocumentMissingException e) {
             logger.log(Level.SEVERE, waveformIndex.getFile() + " Does not exist and thus cannot be deleted");
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Delete the waveformIndex identified by the id fileURI
+     * @param fileURI the fileURI id to be deleted
+     */
+    public void delete(String fileURI) {
+        try {
+            DeleteResponse response = client.delete(
+                    new DeleteRequest(ES_WF_INDEX, ES_WF_TYPE, fileURI), RequestOptions.DEFAULT);
+        } catch (DocumentMissingException e) {
+            logger.log(Level.SEVERE, fileURI + " Does not exist and thus cannot be deleted");
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
