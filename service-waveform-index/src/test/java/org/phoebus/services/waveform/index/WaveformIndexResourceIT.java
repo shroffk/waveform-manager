@@ -40,8 +40,8 @@ public class WaveformIndexResourceIT {
     @Test
     public void createIndex() {
         try {
-            WaveformIndex createdIndex = waveformIndexResource.createIndex(new WaveformIndex("testIndex"));
-            assertTrue("failed to retrieve index : testFile", createdIndex.equals(new WaveformIndex("testIndex")));
+            WaveformIndex createdIndex = waveformIndexResource.createIndex(new WaveformIndex("testFile"));
+            assertTrue("failed to retrieve index : testFile", createdIndex.equals(new WaveformIndex("testFile")));
         } finally {
             // Cleanup
             waveformIndexRepository.delete("testFile");
