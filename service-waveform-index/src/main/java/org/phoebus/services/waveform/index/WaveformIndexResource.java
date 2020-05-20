@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("waveformIndex")
@@ -32,7 +33,12 @@ public class WaveformIndexResource {
      */
     @GetMapping("{fileURI}")
     public WaveformIndex getIndex(@PathVariable String fileURI) {
-        return null;
+        Optional<WaveformIndex> result = waveformIndexRepository.get(fileURI);
+        if (result.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve index:  " + fileURI + " , no such index exits");
+        } else {
+            return result.get();
+        }
     }
 
     /**
@@ -55,7 +61,7 @@ public class WaveformIndexResource {
 
             return waveformIndexRepository.addTag(null, null);
         } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete index:  " + fileURI + " , no such index exits");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to add tag to index:  " + fileURI + " , no such index exits");
         }
     }
 
@@ -65,7 +71,7 @@ public class WaveformIndexResource {
 
             return waveformIndexRepository.addProperty(null, null);
         } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete index:  " + fileURI + " , no such index exits");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to add property to index:  " + fileURI + " , no such index exits");
         }
     }
 
@@ -75,7 +81,7 @@ public class WaveformIndexResource {
 
             return waveformIndexRepository.addPvProperty(null, null);
         } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete index:  " + fileURI + " , no such index exits");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to add pvProperty to index:  " + fileURI + " , no such index exits");
         }
     }
 

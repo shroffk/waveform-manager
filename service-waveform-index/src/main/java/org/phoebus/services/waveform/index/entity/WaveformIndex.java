@@ -3,6 +3,7 @@ package org.phoebus.services.waveform.index.entity;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A class representing an index for a waveform file and its associated tags and properties.
@@ -75,5 +76,21 @@ public class WaveformIndex {
 
     public void addPvProperty(WaveformFilePVProperty pvProperty) {
         this.pvProperties.add(pvProperty);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof WaveformIndex)) return false;
+        WaveformIndex that = (WaveformIndex) o;
+        return file.equals(that.file) &&
+                tags.equals(that.tags) &&
+                properties.equals(that.properties) &&
+                pvProperties.equals(that.pvProperties);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(file, tags, properties, pvProperties);
     }
 }
