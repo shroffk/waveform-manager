@@ -59,7 +59,7 @@ public class WaveformIndexResource {
         return waveformIndexRepository.save(waveformIndex);
     }
 
-    @PostMapping("/{fileURI}/add/{tag}")
+    @PostMapping("/{fileURI}/add/tags/{tag}")
     public WaveformIndex addTag(@PathVariable String fileURI, @PathVariable String tag) {
         if (waveformIndexRepository.checkExists(fileURI)) {
             return waveformIndexRepository.addTag(waveformIndexRepository.get(fileURI).get(), new WaveformFileTag(tag));
@@ -68,7 +68,7 @@ public class WaveformIndexResource {
         }
     }
 
-    @PostMapping("/{fileURI}/remove/{tagName}")
+    @PostMapping("/{fileURI}/remove/tags/{tagName}")
     public WaveformIndex removeTag(@PathVariable String fileURI, @PathVariable String tagName) {
         if (waveformIndexRepository.checkExists(fileURI)) {
             WaveformIndex index = waveformIndexRepository.get(fileURI).get();
@@ -89,7 +89,7 @@ public class WaveformIndexResource {
         }
     }
 
-    @PostMapping("/{fileURI}/remove/{propertyName}")
+    @PostMapping("/{fileURI}/remove/properties/{propertyName}")
     public WaveformIndex removeProperty(@PathVariable String fileURI, @PathVariable final String propertyName) {
         if (waveformIndexRepository.checkExists(fileURI)) {
             WaveformIndex index = waveformIndexRepository.get(fileURI).get();
@@ -110,7 +110,7 @@ public class WaveformIndexResource {
         }
     }
 
-    @PostMapping("/{fileURI}/remove/{pvPropertyName}")
+    @PostMapping("/{fileURI}/remove/pvproperties/{pvPropertyName}")
     public WaveformIndex removePvProperty(@PathVariable String fileURI, @PathVariable final String pvPropertyName) {
         if (waveformIndexRepository.checkExists(fileURI)) {
             WaveformIndex index = waveformIndexRepository.get(fileURI).get();

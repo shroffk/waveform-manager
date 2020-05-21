@@ -1,8 +1,10 @@
 package org.phoebus.services.waveform.index;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.hamcrest.CustomTypeSafeMatcher;
 import org.junit.Assert;
@@ -32,7 +34,7 @@ public class WaveformIndexRepositoryIT {
     private WaveformIndexRepository waveformIndexRepository;
 
     @Test
-    public void createWaveformIndex() {
+    public void createWaveformIndex() throws IOException {
         File file = new File("test_file.h5");
         WaveformIndex index = new WaveformIndex(file.toURI());
         // Create a simple waveform index with only a file
@@ -69,6 +71,8 @@ public class WaveformIndexRepositoryIT {
         index.setTags(List.of(fileTag));
         createdIndex = waveformIndexRepository.save(index);
 
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(System.out, createdIndex);
         Assert.assertThat(createdIndex, new CustomTypeSafeMatcher<WaveformIndex>("Expected Index to be created with tag ") {
             @Override
             protected boolean matchesSafely(WaveformIndex item) {
