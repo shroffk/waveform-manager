@@ -28,6 +28,11 @@ public class WaveformIndexResource {
     @Autowired
     private WaveformIndexRepository waveformIndexRepository;
 
+    @GetMapping
+    public String info() {
+        return "Waveform Index service : version 4.6.4";
+    }
+
     /**
      * GET a single waveformIndex identified by FileURL
      * @param fileURI the {@link WaveformIndex} fileURI
