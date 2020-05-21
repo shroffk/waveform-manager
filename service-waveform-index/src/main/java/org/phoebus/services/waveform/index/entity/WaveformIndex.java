@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * A class representing an index for a waveform file and its associated tags and properties.
@@ -54,6 +55,10 @@ public class WaveformIndex {
         this.tags.add(tag);
     }
 
+    public void removeTag(WaveformFileTag tag) {
+        this.tags.remove(tag);
+    }
+
     public List<WaveformFileProperty> getProperties() {
         return properties;
     }
@@ -66,6 +71,10 @@ public class WaveformIndex {
         this.properties.add(property);
     }
 
+    public void removeProperty(String property) {
+        setProperties(this.properties.stream().filter(p -> { return !p.getName().equalsIgnoreCase(property); }).collect(Collectors.toList()));
+    }
+
     public List<WaveformFilePVProperty> getPvProperties() {
         return pvProperties;
     }
@@ -76,6 +85,10 @@ public class WaveformIndex {
 
     public void addPvProperty(WaveformFilePVProperty pvProperty) {
         this.pvProperties.add(pvProperty);
+    }
+
+    public void removePvProperty(String pvProperty) {
+        setPvProperties(this.pvProperties.stream().filter(p -> { return !p.getPvName().equalsIgnoreCase(pvProperty); }).collect(Collectors.toList()));
     }
 
     @Override
@@ -93,4 +106,5 @@ public class WaveformIndex {
     public int hashCode() {
         return Objects.hash(file, tags, properties, pvProperties);
     }
+
 }

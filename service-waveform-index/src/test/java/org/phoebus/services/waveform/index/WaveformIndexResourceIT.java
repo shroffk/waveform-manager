@@ -1,7 +1,6 @@
 package org.phoebus.services.waveform.index;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,14 +11,9 @@ import org.phoebus.services.waveform.index.entity.WaveformFileTag;
 import org.phoebus.services.waveform.index.entity.WaveformIndex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestContext;
-import org.springframework.test.context.TestExecutionListener;
-import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -85,6 +79,14 @@ public class WaveformIndexResourceIT {
     }
 
     @Test
+    public void removeTag2Index() {
+        waveformIndexResource.addTag(basicWaveformIndexFile, "removeTestTag");
+        waveformIndexResource.removeTag(basicWaveformIndexFile, "removeTestTag");
+        assertTrue("Failed to remove a test tag 'removeTestTag' to index : ",
+                !waveformIndexResource.getIndex(basicWaveformIndexFile).getTags().contains(new WaveformFileTag("addTestTag")));
+    }
+
+    @Test
     public void addTag2MissingIndex() {
         try {
             waveformIndexResource.addTag("missingFile", "testTag");
@@ -114,6 +116,20 @@ public class WaveformIndexResourceIT {
     }
 
     @Test
+    public void removeProperty2Index() {
+        // Create a property with 2 attributes
+        WaveformFileProperty waveformFileProperty = new WaveformFileProperty("removeTestProperty");
+        waveformFileProperty.addAttribute(new WaveformFileAttribute("testAttribute1", "value1"));
+        waveformFileProperty.addAttribute(new WaveformFileAttribute("testAttribute2", "value2"));
+        waveformIndexResource.addProperty(basicWaveformIndexFile, waveformFileProperty);
+        assertTrue("failed to setup remove property test : ",
+                waveformIndexResource.getIndex(basicWaveformIndexFile).getProperties().contains(waveformFileProperty));
+        assertTrue("failed to remove a simple property to index: ",
+                   !waveformIndexResource.removeProperty(basicWaveformIndexFile, "removeTestProperty").getProperties()
+                        .contains(waveformFileProperty));
+    }
+
+    @Test
     public void addProperty2MissingIndex() {
         try {
             waveformIndexResource.addProperty("missingFile", new WaveformFileProperty("emptyProperty"));
@@ -138,10 +154,24 @@ public class WaveformIndexResourceIT {
         waveformFilePVProperty.addAttribute(new WaveformFileAttribute("testAttribute1", "value1"));
         waveformFilePVProperty.addAttribute(new WaveformFileAttribute("testAttribute2", "value2"));
         assertTrue("failed to add a simple pv property to index: ",
-                waveformIndexResource.addPvProperty(basicWaveformIndexFile, emptyWaveformFilePVProperty).getPvProperties()
-                        .contains(emptyWaveformFilePVProperty));
+                waveformIndexResource.addPvProperty(basicWaveformIndexFile, waveformFilePVProperty).getPvProperties()
+                        .contains(waveformFilePVProperty));
 
 
+    }
+
+    @Test
+    public void removePvProperty2Index() {
+        // A property with 2 attributes
+        WaveformFilePVProperty waveformFilePVProperty = new WaveformFilePVProperty("removeTestPvProperty");
+        waveformFilePVProperty.addAttribute(new WaveformFileAttribute("testAttribute1", "value1"));
+        waveformFilePVProperty.addAttribute(new WaveformFileAttribute("testAttribute2", "value2"));
+        waveformIndexResource.addPvProperty(basicWaveformIndexFile, waveformFilePVProperty);
+        assertTrue("failed to setup remove pv property test : ",
+                waveformIndexResource.getIndex(basicWaveformIndexFile).getPvProperties().contains(waveformFilePVProperty));
+        assertTrue("failed to remove a pv property to index: ",
+                !waveformIndexResource.removePvProperty(basicWaveformIndexFile, "removeTestPvProperty").getPvProperties()
+                        .contains(waveformFilePVProperty));
     }
 
     @Test

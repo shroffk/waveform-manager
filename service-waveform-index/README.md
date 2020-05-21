@@ -1,4 +1,4 @@
-# Waveform Manager
+# Waveform Manager Service
 
 A simple rest service which manages an index for a set of HDF 
 waveform files along with a set of tags and properties.

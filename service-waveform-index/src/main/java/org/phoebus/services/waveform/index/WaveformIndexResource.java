@@ -54,7 +54,7 @@ public class WaveformIndexResource {
         return waveformIndexRepository.save(waveformIndex);
     }
 
-    @PostMapping("/{fileURI}/{tag}")
+    @PostMapping("/{fileURI}/add/{tag}")
     public WaveformIndex addTag(@PathVariable String fileURI, @PathVariable String tag) {
         if (waveformIndexRepository.checkExists(fileURI)) {
             return waveformIndexRepository.addTag(waveformIndexRepository.get(fileURI).get(), new WaveformFileTag(tag));
@@ -63,7 +63,18 @@ public class WaveformIndexResource {
         }
     }
 
-    @PostMapping("/{fileURI}/properties")
+    @PostMapping("/{fileURI}/remove/{tagName}")
+    public WaveformIndex removeTag(@PathVariable String fileURI, @PathVariable String tagName) {
+        if (waveformIndexRepository.checkExists(fileURI)) {
+            WaveformIndex index = waveformIndexRepository.get(fileURI).get();
+            index.removeTag(new WaveformFileTag(tagName));
+            return waveformIndexRepository.save(index);
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to remove tag to index:  " + fileURI + " , no such index exits");
+        }
+    }
+
+    @PostMapping("/{fileURI}/add/properties")
     public WaveformIndex addProperty(@PathVariable String fileURI, @RequestBody final WaveformFileProperty waveformFileProperty) {
         if (waveformIndexRepository.checkExists(fileURI)) {
 
@@ -73,13 +84,35 @@ public class WaveformIndexResource {
         }
     }
 
-    @PostMapping("/{fileURI}/pvproperties")
+    @PostMapping("/{fileURI}/remove/{propertyName}")
+    public WaveformIndex removeProperty(@PathVariable String fileURI, @PathVariable final String propertyName) {
+        if (waveformIndexRepository.checkExists(fileURI)) {
+            WaveformIndex index = waveformIndexRepository.get(fileURI).get();
+            index.removeProperty(propertyName);
+            return waveformIndexRepository.save(index);
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to remove property to index:  " + fileURI + " , no such index exits");
+        }
+    }
+
+    @PostMapping("/{fileURI}/add/pvproperties")
     public WaveformIndex addPvProperty(@PathVariable String fileURI, @RequestBody WaveformFilePVProperty waveformFilePVProperty) {
         if (waveformIndexRepository.checkExists(fileURI)) {
 
             return waveformIndexRepository.addPvProperty(waveformIndexRepository.get(fileURI).get(), waveformFilePVProperty);
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to add pvProperty to index:  " + fileURI + " , no such index exits");
+        }
+    }
+
+    @PostMapping("/{fileURI}/remove/{pvPropertyName}")
+    public WaveformIndex removePvProperty(@PathVariable String fileURI, @PathVariable final String pvPropertyName) {
+        if (waveformIndexRepository.checkExists(fileURI)) {
+            WaveformIndex index = waveformIndexRepository.get(fileURI).get();
+            index.removePvProperty(pvPropertyName);
+            return waveformIndexRepository.save(index);
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to remove pv property to index:  " + fileURI + " , no such index exits");
         }
     }
 
@@ -91,4 +124,5 @@ public class WaveformIndexResource {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete index:  " + fileURI + " , no such index exits");
         }
     }
+
 }
