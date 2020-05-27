@@ -64,7 +64,9 @@ public class WaveformIndexViewerController {
 
         // configure the table
         name.setCellValueFactory(new PropertyValueFactory<WaveformIndex, String>("file"));
+        name.setMaxWidth(1f * Integer.MAX_VALUE * 75);
 
+        tags.setMaxWidth(1f * Integer.MAX_VALUE * 25);
         // configure the default search string
         search.setText("*");
         refresh();

@@ -28,6 +28,9 @@
                 <TableColumn fx:id="name" prefWidth="75.0" text="File URI" />
                 <TableColumn fx:id="tags" prefWidth="75.0" text="Tags" />
               </columns>
+               <columnResizePolicy>
+                  <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+               </columnResizePolicy>
             </TableView>
          </children>
       </VBox>
