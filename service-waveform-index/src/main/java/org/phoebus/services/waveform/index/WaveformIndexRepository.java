@@ -7,6 +7,8 @@ import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
@@ -15,6 +17,9 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.engine.DocumentMissingException;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.phoebus.services.waveform.index.entity.WaveformFilePVProperty;
 import org.phoebus.services.waveform.index.entity.WaveformFileProperty;
 import org.phoebus.services.waveform.index.entity.WaveformFileTag;
@@ -28,6 +33,8 @@ import org.elasticsearch.action.DocWriteResponse.Result;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -88,11 +95,35 @@ public class WaveformIndexRepository {
 
     /**
      * Search for waveformIndex's
-     * @param allRequestParams
+     * @param searchParameters
      * @return list of {@link WaveformIndex}s which match the search parameters
      */
-    public List<WaveformIndex> search(MultiValueMap<String, String> allRequestParams) {
-        return null;
+    public List<WaveformIndex> search(MultiValueMap<String, String> searchParameters) {
+
+        SearchRequest searchRequest = new SearchRequest(ES_WF_INDEX+"*");
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+        try
+        {
+            final SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+            List<WaveformIndex> result = new ArrayList<WaveformIndex>();
+            searchResponse.getHits().forEach(hit -> {
+                try
+                {
+                    result.add(mapper.readValue(hit.getSourceAsString(), WaveformIndex.class));
+                } catch (IOException e)
+                {
+                    logger.log(Level.SEVERE, "Failed to parse result for search : " + searchParameters, e);
+                    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                            "Failed to parse result for search : " + searchParameters + ", CAUSE: " + e.getMessage(),
+                            e);
+                }
+            });
+            return result;
+        } catch (IOException e)
+        {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to complete search");
+        }
     }
 
     /**

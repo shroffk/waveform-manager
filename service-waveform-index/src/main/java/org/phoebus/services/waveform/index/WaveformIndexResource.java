@@ -28,7 +28,7 @@ public class WaveformIndexResource {
     @Autowired
     private WaveformIndexRepository waveformIndexRepository;
 
-    @GetMapping
+    @GetMapping("/info")
     public String info() {
         return "Waveform Index service : version 4.6.4";
     }
