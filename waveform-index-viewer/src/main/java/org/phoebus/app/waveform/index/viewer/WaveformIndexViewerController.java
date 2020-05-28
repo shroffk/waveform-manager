@@ -157,7 +157,7 @@ public class WaveformIndexViewerController {
     Image addTags = ImageCache.getImage(WaveformIndexViewerApp.class, "/icons/add_tag.png");
     Image removeProperties = ImageCache.getImage(WaveformIndexViewerApp.class, "/icons/remove_properties.png");
     Image removeTags = ImageCache.getImage(WaveformIndexViewerApp.class, "/icons/remove_tag.png");
-    Image open = ImageCache.getImage(PhoebusApplication.class, "/icons/fldr_obj.png");
+    Image openURI = ImageCache.getImage(PhoebusApplication.class, "/icons/fldr_obj.png");
 
     final ContextMenu contextMenu = new ContextMenu();
     private final Menu openWith = new Menu(Messages.OpenWith, ImageCache.getImageView(WaveformIndexViewerApp.class, "/icons/fldr_obj.png"));
@@ -175,7 +175,7 @@ public class WaveformIndexViewerController {
             final List<AppResourceDescriptor> applications = ApplicationService.getApplications(resource);
             if (applications.size() > 0)
             {
-                MenuItem open = new MenuItem("Add tag", new ImageView(addTags));
+                MenuItem open = new MenuItem("Open", new ImageView(openURI));
                 openWith.getItems().clear();
                 for (AppResourceDescriptor app : applications)
                 {
