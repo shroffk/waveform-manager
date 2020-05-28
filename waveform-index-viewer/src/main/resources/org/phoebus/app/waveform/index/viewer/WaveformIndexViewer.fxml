@@ -9,7 +9,6 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.phoebus.app.waveform.index.viewer.WaveformIndexViewerController">
    <children>
       <VBox prefHeight="200.0" prefWidth="100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -17,13 +16,13 @@
             <HBox alignment="CENTER" spacing="2.0" VBox.vgrow="NEVER">
                <children>
                   <Label alignment="CENTER" text="Search: " textAlignment="CENTER" />
-                  <TextField fx:id="search" HBox.hgrow="ALWAYS" />
+                  <TextField fx:id="search" onAction="#query" HBox.hgrow="ALWAYS" />
                </children>
                <padding>
                   <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                </padding>
             </HBox>
-            <TableView fx:id="tableView" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+            <TableView fx:id="tableView" onContextMenuRequested="#createContextMenu" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
               <columns>
                 <TableColumn fx:id="name" prefWidth="75.0" text="File URI" />
                 <TableColumn fx:id="tags" prefWidth="75.0" text="Tags" />
