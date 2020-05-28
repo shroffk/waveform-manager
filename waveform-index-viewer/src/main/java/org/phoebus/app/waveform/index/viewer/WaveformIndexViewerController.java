@@ -10,7 +10,9 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -24,12 +26,18 @@ import org.phoebus.app.waveform.index.viewer.jobs.AddTag2WaveformIndex;
 import org.phoebus.app.waveform.index.viewer.jobs.RemoveTag2WaveformIndex;
 import org.phoebus.app.waveform.index.viewer.ui.RemoveTagDialog;
 import org.phoebus.framework.jobs.Job;
+import org.phoebus.framework.spi.AppResourceDescriptor;
+import org.phoebus.framework.util.ResourceParser;
+import org.phoebus.framework.workbench.ApplicationService;
+import org.phoebus.ui.application.Messages;
+import org.phoebus.ui.application.PhoebusApplication;
 import org.phoebus.ui.dialog.ExceptionDetailsErrorDialog;
 import org.phoebus.ui.javafx.ImageCache;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,11 +50,6 @@ import java.util.stream.Collectors;
 import static org.phoebus.app.waveform.index.viewer.WaveformIndexViewerApp.logger;
 
 public class WaveformIndexViewerController {
-
-    Image addProperties = ImageCache.getImage(WaveformIndexViewerApp.class, "/icons/add_properties.png");
-    Image addTags = ImageCache.getImage(WaveformIndexViewerApp.class, "/icons/add_tag.png");
-    Image removeProperties = ImageCache.getImage(WaveformIndexViewerApp.class, "/icons/remove_properties.png");
-    Image removeTags = ImageCache.getImage(WaveformIndexViewerApp.class, "/icons/remove_tag.png");
 
     @FXML
     TableView<WaveformIndex> tableView;
@@ -121,9 +124,45 @@ public class WaveformIndexViewerController {
         }
     }
 
+    Image addProperties = ImageCache.getImage(WaveformIndexViewerApp.class, "/icons/add_properties.png");
+    Image addTags = ImageCache.getImage(WaveformIndexViewerApp.class, "/icons/add_tag.png");
+    Image removeProperties = ImageCache.getImage(WaveformIndexViewerApp.class, "/icons/remove_properties.png");
+    Image removeTags = ImageCache.getImage(WaveformIndexViewerApp.class, "/icons/remove_tag.png");
+    Image open = ImageCache.getImage(PhoebusApplication.class, "/icons/fldr_obj.png");
+
+    final ContextMenu contextMenu = new ContextMenu();
+    private final Menu openWith = new Menu(Messages.OpenWith, ImageCache.getImageView(WaveformIndexViewerApp.class, "/icons/fldr_obj.png"));
+
     @FXML
     public void createContextMenu() {
-        final ContextMenu contextMenu = new ContextMenu();
+        contextMenu.getItems().clear();
+
+        List<URI> fileURIs = tableView.getSelectionModel().getSelectedItems().stream().map(index -> {
+            return index.getFile();
+        }).collect(Collectors.toList());
+
+        if(fileURIs.size() == 1) {
+            URI resource = fileURIs.get(0);
+            final List<AppResourceDescriptor> applications = ApplicationService.getApplications(resource);
+            if (applications.size() > 0)
+            {
+                MenuItem open = new MenuItem("Add tag", new ImageView(addTags));
+                openWith.getItems().clear();
+                for (AppResourceDescriptor app : applications)
+                {
+                    final MenuItem open_app = new MenuItem(app.getDisplayName());
+                    final URL icon_url = app.getIconURL();
+                    if (icon_url != null)
+                        open_app.setGraphic(new ImageView(icon_url.toExternalForm()));
+                    open_app.setOnAction(event -> app.create(resource));
+                    openWith.getItems().add(open_app);
+                }
+                contextMenu.getItems().add(openWith);
+            }
+            contextMenu.getItems().add(new SeparatorMenuItem());
+        }
+
+
         // Add tag to waveform file
         MenuItem addTag = new MenuItem("Add tag", new ImageView(addTags));
         addTag.setOnAction(e -> {
