@@ -7,12 +7,16 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.Separator;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -20,6 +24,7 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
 import org.phoebus.app.waveform.index.viewer.entity.WaveformFileTag;
 import org.phoebus.app.waveform.index.viewer.entity.WaveformIndex;
 import org.phoebus.app.waveform.index.viewer.jobs.AddTag2WaveformIndex;
@@ -56,8 +61,7 @@ public class WaveformIndexViewerController {
     @FXML
     TableColumn name;
     @FXML
-    TableColumn tags;
-
+    TableColumn<WaveformIndex, WaveformIndex> tags;
 
     @FXML
     TextField search;
@@ -101,6 +105,31 @@ public class WaveformIndexViewerController {
         name.setMaxWidth(1f * Integer.MAX_VALUE * 75);
 
         tags.setMaxWidth(1f * Integer.MAX_VALUE * 25);
+        tags.setCellValueFactory(col -> {
+            return new SimpleObjectProperty(col.getValue());
+        });
+        tags.setCellFactory(col -> {
+            final GridPane pane = new GridPane();
+            final Label tags = new Label();
+            pane.addColumn(0, tags);
+
+            return new TableCell<WaveformIndex, WaveformIndex>() {
+
+                @Override
+                public void updateItem(WaveformIndex index, boolean empty) {
+                    super.updateItem(index, empty);
+                    if (empty) {
+                        tags.setText("");
+                        setGraphic(null);
+                    } else {
+                        tags.setText(index.getTags().stream().map(WaveformFileTag::getName)
+                                .collect(Collectors.joining(System.lineSeparator())));
+                        tags.setGraphic(new ImageView(addTags));
+                        setGraphic(pane);
+                    }
+                }
+            };
+        });
         // configure the default search string
         search.setText("file=*");
         refresh();
@@ -158,8 +187,8 @@ public class WaveformIndexViewerController {
                     openWith.getItems().add(open_app);
                 }
                 contextMenu.getItems().add(openWith);
+                contextMenu.getItems().add(new SeparatorMenuItem());
             }
-            contextMenu.getItems().add(new SeparatorMenuItem());
         }
 
 
@@ -182,11 +211,10 @@ public class WaveformIndexViewerController {
                     return index.getFile().toString();
                 }).collect(Collectors.toList());
 
-                AddTag2WaveformIndex.submit(service,
+                addTagJob = AddTag2WaveformIndex.submit(service,
                         fileNames,
                         tagName,
                         (url, ex) -> ExceptionDetailsErrorDialog.openError("Add tag : " + tagName + " to WaveformIndex Error", ex.getMessage(), ex));
-
             });
         });
         // Remove tag to waveform file
@@ -208,7 +236,7 @@ public class WaveformIndexViewerController {
                 if (removeTagJob != null) {
                     removeTagJob.cancel();
                 }
-                RemoveTag2WaveformIndex.submit(
+                removeTagJob = RemoveTag2WaveformIndex.submit(
                         service,
                         fileNames,
                         tagName,
@@ -216,8 +244,17 @@ public class WaveformIndexViewerController {
 
             });
         });
+
+
+        // Remove Property to waveform file
+        MenuItem addProperty = new MenuItem("Add Property", new ImageView(addProperties));
+        // Remove Property to waveform file
+        MenuItem removeProperty = new MenuItem("Remove Property", new ImageView(removeProperties));
+
         contextMenu.getItems().add(addTag);
         contextMenu.getItems().add(removeTag);
+        contextMenu.getItems().add(addProperty);
+        contextMenu.getItems().add(removeProperty);
 
         tableView.setContextMenu(contextMenu);
     }
