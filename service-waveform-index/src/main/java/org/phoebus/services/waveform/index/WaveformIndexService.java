@@ -23,4 +23,5 @@ public class WaveformIndexService {
     public static void main(final String[] original_args) throws Exception {
         context = SpringApplication.run(WaveformIndexService.class, original_args);
     }
+
 }

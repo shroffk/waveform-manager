@@ -50,7 +50,7 @@ Location header: http://localhost:8090/example/v1/hotels/1
 #### Retrieve an Index
 
 ```
-GET /waveformIndex/{fileURI}
+GET /waveformIndex?fileURI={fileURI}
 
 Response: HTTP 200
 Content: paginated list 
@@ -59,14 +59,14 @@ Content: paginated list
 #### Add a tag to Index
 
 ```
-POST /waveformIndex/{fileURI}/add/{tagName}
+POST /waveformIndex/add/{tagName}?fileURI={fileURI}
 
 RESPONSE: HTTP 200 (No Content)
 ```
 #### Remove a tag from an Index
 
 ```
-DELETE /waveformIndex/{fileURI}/remove/tags/{tagName}
+DELETE /waveformIndex/remove/tags/{tagName}?fileURI={fileURI}
 
 RESPONSE: HTTP 200 (No Content)
 ```
@@ -74,7 +74,7 @@ RESPONSE: HTTP 200 (No Content)
 #### Add a property to Index
 
 ```
-POST /waveformIndex/{fileURI}/add/properties
+POST /waveformIndex/add/properties?fileURI={fileURI}
 Accept: application/json
 Content-Type: application/json
 
@@ -99,7 +99,7 @@ RESPONSE: HTTP 200 (No Content)
 #### Remove a property from an Index
 
 ```
-DELETE /waveformIndex/{fileURI}/remove/properties/{propertyName}
+DELETE /waveformIndex/remove/properties/{propertyName}?fileURI={fileURI}
 
 RESPONSE: HTTP 200 (No Content)
 ```
@@ -107,7 +107,7 @@ RESPONSE: HTTP 200 (No Content)
 #### Add a pv property to Index
 
 ```
-POST /waveformIndex/{fileURI}/add/pvproperties
+POST /waveformIndex/add/pvproperties?fileURI={fileURI}
 Accept: application/json
 Content-Type: application/json
 
@@ -131,7 +131,7 @@ RESPONSE: HTTP 200 (No Content)
 #### Remove a pv property from an Index
 
 ```
-DELETE /waveformIndex/{fileURI}/remove/pvproperties/{pvpropertyName}
+DELETE /waveformIndex/remove/pvproperties/{pvpropertyName}?fileURI={fileURI}
 
 RESPONSE: HTTP 200 (No Content)
 ```

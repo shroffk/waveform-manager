@@ -40,8 +40,8 @@ public class WaveformIndexResource {
      * @param fileURI the {@link WaveformIndex} fileURI
      * @return WaveformIndex identified by fileURI
      */
-    @GetMapping("{fileURI}")
-    public WaveformIndex getIndex(@PathVariable String fileURI) {
+    @GetMapping()
+    public WaveformIndex getIndex(@RequestParam(name = "fileURI") String fileURI) {
         try {
             Optional<WaveformIndex> result = waveformIndexRepository.get(URLDecoder.decode(fileURI, "UTF-8"));
             if (result.isEmpty()) {
@@ -54,8 +54,8 @@ public class WaveformIndexResource {
         }
     }
 
-    @GetMapping()
-    public List<WaveformIndex> findLogs(@RequestParam MultiValueMap<String, String> allRequestParams) {
+    @GetMapping("search")
+    public List<WaveformIndex> findIndices(@RequestParam MultiValueMap<String, String> allRequestParams) {
         return waveformIndexRepository.search(allRequestParams);
     }
 
@@ -65,8 +65,8 @@ public class WaveformIndexResource {
         return waveformIndexRepository.save(waveformIndex);
     }
 
-    @PostMapping("/{fileURI}/add/tags/{tag}")
-    public WaveformIndex addTag(@PathVariable String fileURI, @PathVariable String tag) {
+    @PostMapping("/add/tags/{tag}")
+    public WaveformIndex addTag(@RequestParam(name = "fileURI") String fileURI, @PathVariable String tag) {
         try {
             String parsedFileURI = URLDecoder.decode(fileURI, "UTF-8");
             if (waveformIndexRepository.checkExists(parsedFileURI)) {
@@ -79,8 +79,8 @@ public class WaveformIndexResource {
         }
     }
 
-    @PostMapping("/{fileURI}/remove/tags/{tagName}")
-    public WaveformIndex removeTag(@PathVariable String fileURI, @PathVariable String tagName) {
+    @PostMapping("/remove/tags/{tagName}")
+    public WaveformIndex removeTag(@RequestParam(name = "fileURI") String fileURI, @PathVariable String tagName) {
         try {
             String parsedFileURI = URLDecoder.decode(fileURI, "UTF-8");
             if (waveformIndexRepository.checkExists(parsedFileURI)) {
@@ -95,8 +95,8 @@ public class WaveformIndexResource {
         }
     }
 
-    @PostMapping("/{fileURI}/add/properties")
-    public WaveformIndex addProperty(@PathVariable String fileURI, @RequestBody final WaveformFileProperty waveformFileProperty) {
+    @PostMapping("/add/properties")
+    public WaveformIndex addProperty(@RequestParam(name = "fileURI") String fileURI, @RequestBody final WaveformFileProperty waveformFileProperty) {
         try {
             String parsedFileURI = URLDecoder.decode(fileURI, "UTF-8");
             if (waveformIndexRepository.checkExists(parsedFileURI)) {
@@ -109,8 +109,8 @@ public class WaveformIndexResource {
         }
     }
 
-    @PostMapping("/{fileURI}/remove/properties/{propertyName}")
-    public WaveformIndex removeProperty(@PathVariable String fileURI, @PathVariable final String propertyName) {
+    @PostMapping("/remove/properties/{propertyName}")
+    public WaveformIndex removeProperty(@RequestParam(name = "fileURI") String fileURI, @PathVariable final String propertyName) {
         try {
             String parsedFileURI = URLDecoder.decode(fileURI, "UTF-8");
             if (waveformIndexRepository.checkExists(parsedFileURI)) {
@@ -125,8 +125,8 @@ public class WaveformIndexResource {
         }
     }
 
-    @PostMapping("/{fileURI}/add/pvproperties")
-    public WaveformIndex addPvProperty(@PathVariable String fileURI, @RequestBody WaveformFilePVProperty waveformFilePVProperty) {
+    @PostMapping("/add/pvproperties")
+    public WaveformIndex addPvProperty(@RequestParam(name = "fileURI") String fileURI, @RequestBody WaveformFilePVProperty waveformFilePVProperty) {
         try {
             String parsedFileURI = URLDecoder.decode(fileURI, "UTF-8");
             if (waveformIndexRepository.checkExists(parsedFileURI)) {
@@ -139,8 +139,8 @@ public class WaveformIndexResource {
         }
     }
 
-    @PostMapping("/{fileURI}/remove/pvproperties/{pvPropertyName}")
-    public WaveformIndex removePvProperty(@PathVariable String fileURI, @PathVariable final String pvPropertyName) {
+    @PostMapping("/remove/pvproperties/{pvPropertyName}")
+    public WaveformIndex removePvProperty(@RequestParam(name = "fileURI") String fileURI, @PathVariable final String pvPropertyName) {
         try {
             String parsedFileURI = URLDecoder.decode(fileURI, "UTF-8");
             if (waveformIndexRepository.checkExists(parsedFileURI)) {
@@ -155,8 +155,8 @@ public class WaveformIndexResource {
         }
     }
 
-    @DeleteMapping("/{fileURI}")
-    public void deleteIndex(@PathVariable String fileURI) {
+    @DeleteMapping()
+    public void deleteIndex(@RequestParam(name = "fileURI") String fileURI) {
         try {
             if (waveformIndexRepository.checkExists(URLDecoder.decode(fileURI, "UTF-8"))) {
                 waveformIndexRepository.delete(fileURI);
