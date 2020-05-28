@@ -31,6 +31,9 @@ import org.phoebus.app.waveform.index.viewer.jobs.AddTag2WaveformIndex;
 import org.phoebus.app.waveform.index.viewer.jobs.RemoveTag2WaveformIndex;
 import org.phoebus.app.waveform.index.viewer.ui.RemoveTagDialog;
 import org.phoebus.framework.jobs.Job;
+import org.phoebus.framework.jobs.JobManager;
+import org.phoebus.framework.jobs.JobMonitor;
+import org.phoebus.framework.jobs.JobRunnable;
 import org.phoebus.framework.spi.AppResourceDescriptor;
 import org.phoebus.framework.util.ResourceParser;
 import org.phoebus.framework.workbench.ApplicationService;
@@ -50,6 +53,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static org.phoebus.app.waveform.index.viewer.WaveformIndexViewerApp.logger;
@@ -68,7 +72,7 @@ public class WaveformIndexViewerController {
 
     // Client resource
     private URI serviceURL;
-    private volatile boolean initialized = false;
+    private AtomicBoolean initialized = new AtomicBoolean(false);
     private volatile WebResource service;
     private ObjectMapper mapper = new ObjectMapper();
 
@@ -87,11 +91,19 @@ public class WaveformIndexViewerController {
     @FXML
     private void initialize() {
         serviceURL = URI.create(WaveformIndexViewerPreferences.waveform_index_url);
-        if (!initialized) {
-            Client client = Client.create(new DefaultClientConfig());
-            client.setFollowRedirects(true);
-            service = client.resource(serviceURL.toString());
-        }
+        JobRunnable initializeService = new JobRunnable() {
+            @Override
+            public void run(JobMonitor jobMonitor) throws Exception {
+                if (!initialized.get()) {
+                    Client client = Client.create(new DefaultClientConfig());
+                    client.setFollowRedirects(true);
+                    service = client.resource(serviceURL.toString());
+                    logger.info("Successfully initialized the ");
+                    initialized.set(true);
+                }
+            }
+        };
+        Job job = JobManager.schedule("initialize waveform Index : ", initializeService);
 
         // fetch the files
         String info = service.path(INFO)

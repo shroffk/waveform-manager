@@ -1,5 +1,11 @@
 package org.phoebus.hdf.display;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
 import hdf.object.h5.H5ScalarDS;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
@@ -8,7 +14,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
@@ -18,8 +23,6 @@ import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontPosture;
 import javafx.util.Callback;
 import org.csstudio.javafx.rtplot.LineStyle;
 import org.csstudio.javafx.rtplot.PointType;
@@ -29,19 +32,26 @@ import org.csstudio.javafx.rtplot.TraceType;
 import org.csstudio.javafx.rtplot.data.ArrayPlotDataProvider;
 import org.csstudio.javafx.rtplot.data.SimpleDataItem;
 import org.csstudio.javafx.rtplot.util.RGBFactory;
-import org.phoebus.ui.application.Messages;
+import org.phoebus.app.waveform.index.viewer.WaveformIndexViewerPreferences;
+import org.phoebus.app.waveform.index.viewer.entity.WaveformFileAttribute;
+import org.phoebus.app.waveform.index.viewer.entity.WaveformFilePVProperty;
+import org.phoebus.app.waveform.index.viewer.entity.WaveformIndex;
+import org.phoebus.framework.jobs.Job;
+import org.phoebus.framework.jobs.JobManager;
+import org.phoebus.framework.jobs.JobMonitor;
+import org.phoebus.framework.jobs.JobRunnable;
 import org.phoebus.ui.application.PhoebusApplication;
 import org.phoebus.ui.javafx.ImageCache;
 
+import javax.ws.rs.core.MediaType;
 import java.io.File;
-import java.io.IOException;
+import java.net.URI;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.phoebus.hdf.display.HDFFileProcessor.HDFDisplayTreeNode;
 
@@ -74,9 +84,31 @@ public class HDFDisplayController {
 
     // HDF file
     private File file;
+    // WaveformIndex
+    // Client resource
+    private URI serviceURL;
+    private AtomicBoolean initialized = new AtomicBoolean(false);
+    private volatile WebResource service;
+
+    private WaveformIndex waveformIndex;
 
     @FXML
     public void initialize() {
+
+        serviceURL = URI.create(WaveformIndexViewerPreferences.waveform_index_url);
+        JobRunnable initializeService = new JobRunnable() {
+            @Override
+            public void run(JobMonitor jobMonitor) throws Exception {
+                if (!initialized.get()) {
+                    Client client = Client.create(new DefaultClientConfig());
+                    client.setFollowRedirects(true);
+                    service = client.resource(serviceURL.toString());
+                    initialized.set(true);
+                }
+            }
+        };
+        Job job = JobManager.schedule("initialize waveform Index : ", initializeService);
+
         this.file = new File("C:\\hdf5\\Test.h5");
 
         final FXMLLoader loader = new FXMLLoader();
@@ -213,7 +245,6 @@ public class HDFDisplayController {
 
     }
 
-
     // A list of traces mapped to the associated selected pv's in the tree
     private final Map<String, Trace> traces = new ConcurrentHashMap<>();
     final RGBFactory colors = new RGBFactory();
@@ -238,17 +269,45 @@ public class HDFDisplayController {
                 e.printStackTrace();
             }
         }
+        if(waveformIndex != null) {
+            WaveformFilePVProperty pvProperty = new WaveformFilePVProperty(item.getName());
+            pvProperty.addAttribute(new WaveformFileAttribute("plot", "true"));
+            try {
+                service.path("add/pvproperties")
+                           .queryParam("fileURI", this.file.toURI().toString())
+                           .type(MediaType.APPLICATION_JSON)
+                           .post(mapper.writeValueAsString(pvProperty));
+                retrieveIndex();
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void remoteFromPlot(HDFDisplayTreeNode item) {
         if(traces.containsKey(item.getName())){
             rtTimePlot.removeTrace(traces.remove(item.getName()));
         }
+        if(waveformIndex != null) {
+            if(waveformIndex != null) {
+                WaveformFilePVProperty pvProperty = new WaveformFilePVProperty(item.getName());
+                pvProperty.addAttribute(new WaveformFileAttribute("plot", "false"));
+                try {
+                    service.path("add/pvproperties")
+                            .queryParam("fileURI", this.file.toURI().toString())
+                            .type(MediaType.APPLICATION_JSON)
+                            .post(mapper.writeValueAsString(pvProperty));
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
 
     public void setFile(File file) {
         this.file = file;
+        retrieveIndex();
         constructTree();
     }
 
@@ -261,19 +320,19 @@ public class HDFDisplayController {
         }
     }
 
-    private static class HDFCell extends AnchorPane {
+    private ObjectMapper mapper = new ObjectMapper();
 
-        public HDFCell(HDFDisplayTreeNode item) throws IOException {
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("HDFTreeCell.fxml"));
-            fxmlLoader.setRoot(this);
-            fxmlLoader.load();
-
-            HDFTreeCellController controller = fxmlLoader.getController();
-            if (item != null) {
-                controller.checkBox.setText(item.getName());
-                controller.checkBox.selectedProperty().bindBidirectional(item.isPlotted());
+    public void retrieveIndex() {
+        if (service != null) {
+            try {
+                this.waveformIndex = mapper.readValue(
+                        service.path("search").queryParam("fileURI", this.file.toURI().toString()).get(String.class),
+                        new TypeReference<List<WaveformIndex>>() {
+                        }).get(0);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
             }
         }
-
     }
+
 }

@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -52,7 +53,13 @@ public class WaveformIndex {
     }
 
     public void addTag(WaveformFileTag tag) {
-        this.tags.add(tag);
+        List<WaveformFileTag> existingTag = this.tags.stream().filter((t) -> {
+            return t.getName().equals(tag.getName());
+        }).collect(Collectors.toList());
+
+        if (existingTag.size() == 0) {
+            this.tags.add(tag);
+        }
     }
 
     public void removeTag(WaveformFileTag tag) {
@@ -84,7 +91,21 @@ public class WaveformIndex {
     }
 
     public void addPvProperty(WaveformFilePVProperty pvProperty) {
-        this.pvProperties.add(pvProperty);
+        List<WaveformFilePVProperty> existingPvProperty = this.pvProperties.stream().filter((pv) -> {
+            return pv.getPvName().equals(pvProperty.getPvName());
+        }).collect(Collectors.toList());
+
+        if (existingPvProperty.size() > 0) {
+            Set<String> newAttributes = pvProperty.getAttributes().stream().map(WaveformFileAttribute::getName).collect(Collectors.toSet());
+            Set<WaveformFileAttribute> updatedAttributes = existingPvProperty.get(0).getAttributes().stream().filter(attribute -> {
+                        return !newAttributes.contains(attribute.getName());
+                    }
+            ).collect(Collectors.toSet());
+            updatedAttributes.addAll(pvProperty.getAttributes());
+            existingPvProperty.get(0).setAttributes(updatedAttributes);
+        } else {
+            this.pvProperties.add(pvProperty);
+        }
     }
 
     public void removePvProperty(String pvProperty) {

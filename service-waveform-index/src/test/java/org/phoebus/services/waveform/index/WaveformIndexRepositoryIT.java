@@ -2,7 +2,10 @@ package org.phoebus.services.waveform.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -85,7 +88,7 @@ public class WaveformIndexRepositoryIT {
          * Create a waveform index with pv properties
          */
         WaveformFilePVProperty filePvProperties = new WaveformFilePVProperty("sim://testPV");
-        filePvProperties.setAttributes(List.of(new WaveformFileAttribute("pvAttribute1", "value"),
+        filePvProperties.setAttributes(Set.of(new WaveformFileAttribute("pvAttribute1", "value"),
                                                new WaveformFileAttribute("pvAttribute2", "value")));
         index.setPvProperties(List.of(filePvProperties));
 
@@ -147,9 +150,19 @@ public class WaveformIndexRepositoryIT {
         WaveformIndex createdIndex = waveformIndexRepository.save(index);
 
         WaveformFilePVProperty filePvProperties = new WaveformFilePVProperty("sim://testPV");
-        filePvProperties.setAttributes(List.of(new WaveformFileAttribute("pvAttribute1", "value"),
-                                               new WaveformFileAttribute("pvAttribute2", "value")));
+        filePvProperties.setAttributes(new HashSet<>() {{add(new WaveformFileAttribute("pvAttribute1", "value"));
+                                                         add(new WaveformFileAttribute("pvAttribute2", "value"));}});
         WaveformIndex updatedIndex = waveformIndexRepository.addPvProperty(createdIndex, filePvProperties);
+        Assert.assertThat(updatedIndex, new CustomTypeSafeMatcher<WaveformIndex>("Expected Index to be created with property ") {
+            @Override
+            protected boolean matchesSafely(WaveformIndex item) {
+                return item.getFile().equals(file.toURI())
+                        && item.getPvProperties().contains(filePvProperties);
+            }
+        });
+
+        filePvProperties.addAttribute(new WaveformFileAttribute("pvAttribute3", "value"));
+        updatedIndex = waveformIndexRepository.addPvProperty(createdIndex, filePvProperties);
         Assert.assertThat(updatedIndex, new CustomTypeSafeMatcher<WaveformIndex>("Expected Index to be created with property ") {
             @Override
             protected boolean matchesSafely(WaveformIndex item) {

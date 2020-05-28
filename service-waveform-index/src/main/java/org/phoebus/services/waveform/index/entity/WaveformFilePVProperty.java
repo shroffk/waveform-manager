@@ -1,12 +1,14 @@
 package org.phoebus.services.waveform.index.entity;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public class WaveformFilePVProperty {
     private String pvName;
-    private List<WaveformFileAttribute> attributes = new ArrayList<>();
+    private Set<WaveformFileAttribute> attributes = new HashSet<>();
 
     WaveformFilePVProperty() {
 
@@ -24,11 +26,11 @@ public class WaveformFilePVProperty {
         this.pvName = pvname;
     }
 
-    public List<WaveformFileAttribute> getAttributes() {
+    public Set<WaveformFileAttribute> getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(List<WaveformFileAttribute> attributes) {
+    public void setAttributes(Set<WaveformFileAttribute> attributes) {
         this.attributes = attributes;
     }
 
