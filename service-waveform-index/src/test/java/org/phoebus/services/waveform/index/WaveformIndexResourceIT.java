@@ -15,7 +15,12 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 /**
@@ -63,6 +68,35 @@ public class WaveformIndexResourceIT {
             WaveformIndex createdIndex = waveformIndexRepository.save(new WaveformIndex("testFile"));
             // Delete resource using the WaveformIndexResource
             waveformIndexResource.deleteIndex(createdIndex.getFile().toString());
+        } finally {
+            // Cleanup
+            waveformIndexRepository.delete("testFile");
+        }
+    }
+
+    // Test URIs with escaped characters
+
+    @Test
+    public void escapedCharIndex() {
+        try {
+
+            File file = new File("C:/hdf5/Jan-01-2020-test.h5");
+            String fileURI = file.toURI().toString();
+            String encodedFileURI = URLEncoder.encode(file.toURI().toString(), "UTF-8");
+
+            WaveformIndex createdIndex = waveformIndexResource.createIndex(new WaveformIndex(fileURI));
+            assertTrue("failed to retrieve index : " + fileURI, createdIndex.equals(new WaveformIndex(fileURI)));
+
+            // get resource requires the fileURI to be encoded.
+            WaveformIndex getIndex = waveformIndexResource.getIndex(fileURI);
+            assertTrue("failed to retrieve index : " + fileURI, getIndex.equals(createdIndex));
+            getIndex = waveformIndexResource.getIndex(encodedFileURI);
+            assertTrue("failed to retrieve index : " + fileURI, getIndex.equals(createdIndex));
+
+            // Delete resource using the WaveformIndexResource
+            waveformIndexResource.deleteIndex(encodedFileURI);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         } finally {
             // Cleanup
             waveformIndexRepository.delete("testFile");

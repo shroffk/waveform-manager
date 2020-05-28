@@ -1,6 +1,7 @@
 package org.phoebus.services.waveform.index;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
@@ -15,9 +16,11 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.bytes.BytesReference;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.DisMaxQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.phoebus.services.waveform.index.entity.WaveformFilePVProperty;
@@ -37,10 +40,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import static org.phoebus.services.waveform.index.WaveformIndexService.*;
+
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
+import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
+import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
+import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
+import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
+
 
 @Repository
 public class WaveformIndexRepository {
@@ -105,8 +119,42 @@ public class WaveformIndexRepository {
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
         try
         {
-            final SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
             List<WaveformIndex> result = new ArrayList<WaveformIndex>();
+
+            for (Entry<String, List<String>> parameter : searchParameters.entrySet())
+            {
+                switch (parameter.getKey().strip().toLowerCase()) {
+                    case "file":
+                        DisMaxQueryBuilder fileQuery = disMaxQuery();
+                        for (String value : parameter.getValue()) {
+                            for (String pattern : value.split("[\\|,;]")) {
+                                fileQuery.add(wildcardQuery("file", pattern.trim()));
+                            }
+                        }
+                        boolQuery.must(fileQuery);
+                        break;
+                    case "tags":
+                        DisMaxQueryBuilder tagQuery = disMaxQuery();
+                        for (String value : parameter.getValue()) {
+                            for (String pattern : value.split("[\\|,;]")) {
+                                tagQuery.add(wildcardQuery("tags.name", pattern.trim()));
+                            }
+                        }
+                        boolQuery.must(nestedQuery("tags", tagQuery, ScoreMode.None));
+                        break;
+                }
+
+            }
+
+            searchSourceBuilder.query(boolQuery);
+            searchSourceBuilder.from(0);
+            searchSourceBuilder.size(100);
+
+            searchSourceBuilder.timeout(new TimeValue(60, TimeUnit.SECONDS));
+
+            searchRequest.source(searchSourceBuilder);
+
+            final SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
             searchResponse.getHits().forEach(hit -> {
                 try
                 {

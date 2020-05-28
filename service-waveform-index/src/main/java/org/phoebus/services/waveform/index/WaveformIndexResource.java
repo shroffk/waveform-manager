@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,11 +42,15 @@ public class WaveformIndexResource {
      */
     @GetMapping("{fileURI}")
     public WaveformIndex getIndex(@PathVariable String fileURI) {
-        Optional<WaveformIndex> result = waveformIndexRepository.get(fileURI);
-        if (result.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve index:  " + fileURI + " , no such index exits");
-        } else {
-            return result.get();
+        try {
+            Optional<WaveformIndex> result = waveformIndexRepository.get(URLDecoder.decode(fileURI, "UTF-8"));
+            if (result.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to retrieve index:  " + fileURI + " , no such index exits");
+            } else {
+                return result.get();
+            }
+        } catch (UnsupportedEncodingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to retrieve index:  " + fileURI, e);
         }
     }
 
@@ -61,72 +67,104 @@ public class WaveformIndexResource {
 
     @PostMapping("/{fileURI}/add/tags/{tag}")
     public WaveformIndex addTag(@PathVariable String fileURI, @PathVariable String tag) {
-        if (waveformIndexRepository.checkExists(fileURI)) {
-            return waveformIndexRepository.addTag(waveformIndexRepository.get(fileURI).get(), new WaveformFileTag(tag));
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to add tag to index:  " + fileURI + " , no such index exits");
+        try {
+            String parsedFileURI = URLDecoder.decode(fileURI, "UTF-8");
+            if (waveformIndexRepository.checkExists(parsedFileURI)) {
+                return waveformIndexRepository.addTag(waveformIndexRepository.get(parsedFileURI).get(), new WaveformFileTag(tag));
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to add tag to index:  " + fileURI + " , no such index exits");
+            }
+        } catch (UnsupportedEncodingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to add tag to index:  " + fileURI, e);
         }
     }
 
     @PostMapping("/{fileURI}/remove/tags/{tagName}")
     public WaveformIndex removeTag(@PathVariable String fileURI, @PathVariable String tagName) {
-        if (waveformIndexRepository.checkExists(fileURI)) {
-            WaveformIndex index = waveformIndexRepository.get(fileURI).get();
-            index.removeTag(new WaveformFileTag(tagName));
-            return waveformIndexRepository.save(index);
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to remove tag to index:  " + fileURI + " , no such index exits");
+        try {
+            String parsedFileURI = URLDecoder.decode(fileURI, "UTF-8");
+            if (waveformIndexRepository.checkExists(parsedFileURI)) {
+                WaveformIndex index = waveformIndexRepository.get(parsedFileURI).get();
+                index.removeTag(new WaveformFileTag(tagName));
+                return waveformIndexRepository.save(index);
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to remove tag to index:  " + fileURI + " , no such index exits");
+            }
+        } catch (UnsupportedEncodingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to remove tag to index:  " + fileURI, e);
         }
     }
 
     @PostMapping("/{fileURI}/add/properties")
     public WaveformIndex addProperty(@PathVariable String fileURI, @RequestBody final WaveformFileProperty waveformFileProperty) {
-        if (waveformIndexRepository.checkExists(fileURI)) {
-
-            return waveformIndexRepository.addProperty(waveformIndexRepository.get(fileURI).get(), waveformFileProperty);
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to add property to index:  " + fileURI + " , no such index exits");
+        try {
+            String parsedFileURI = URLDecoder.decode(fileURI, "UTF-8");
+            if (waveformIndexRepository.checkExists(parsedFileURI)) {
+                return waveformIndexRepository.addProperty(waveformIndexRepository.get(parsedFileURI).get(), waveformFileProperty);
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to add property to index:  " + fileURI + " , no such index exits");
+            }
+        } catch (UnsupportedEncodingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to  add property to index:  " + fileURI, e);
         }
     }
 
     @PostMapping("/{fileURI}/remove/properties/{propertyName}")
     public WaveformIndex removeProperty(@PathVariable String fileURI, @PathVariable final String propertyName) {
-        if (waveformIndexRepository.checkExists(fileURI)) {
-            WaveformIndex index = waveformIndexRepository.get(fileURI).get();
-            index.removeProperty(propertyName);
-            return waveformIndexRepository.save(index);
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to remove property to index:  " + fileURI + " , no such index exits");
+        try {
+            String parsedFileURI = URLDecoder.decode(fileURI, "UTF-8");
+            if (waveformIndexRepository.checkExists(parsedFileURI)) {
+                WaveformIndex index = waveformIndexRepository.get(parsedFileURI).get();
+                index.removeProperty(propertyName);
+                return waveformIndexRepository.save(index);
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to remove property to index:  " + fileURI + " , no such index exits");
+            }
+        } catch (UnsupportedEncodingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to  remove property to index:  " + fileURI, e);
         }
     }
 
     @PostMapping("/{fileURI}/add/pvproperties")
     public WaveformIndex addPvProperty(@PathVariable String fileURI, @RequestBody WaveformFilePVProperty waveformFilePVProperty) {
-        if (waveformIndexRepository.checkExists(fileURI)) {
-
-            return waveformIndexRepository.addPvProperty(waveformIndexRepository.get(fileURI).get(), waveformFilePVProperty);
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to add pvProperty to index:  " + fileURI + " , no such index exits");
+        try {
+            String parsedFileURI = URLDecoder.decode(fileURI, "UTF-8");
+            if (waveformIndexRepository.checkExists(parsedFileURI)) {
+                return waveformIndexRepository.addPvProperty(waveformIndexRepository.get(parsedFileURI).get(), waveformFilePVProperty);
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to add pvProperty to index:  " + fileURI + " , no such index exits");
+            }
+        } catch (UnsupportedEncodingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to  add pvProperty to index:  " + fileURI, e);
         }
     }
 
     @PostMapping("/{fileURI}/remove/pvproperties/{pvPropertyName}")
     public WaveformIndex removePvProperty(@PathVariable String fileURI, @PathVariable final String pvPropertyName) {
-        if (waveformIndexRepository.checkExists(fileURI)) {
-            WaveformIndex index = waveformIndexRepository.get(fileURI).get();
-            index.removePvProperty(pvPropertyName);
-            return waveformIndexRepository.save(index);
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to remove pv property to index:  " + fileURI + " , no such index exits");
+        try {
+            String parsedFileURI = URLDecoder.decode(fileURI, "UTF-8");
+            if (waveformIndexRepository.checkExists(parsedFileURI)) {
+                WaveformIndex index = waveformIndexRepository.get(parsedFileURI).get();
+                index.removePvProperty(pvPropertyName);
+                return waveformIndexRepository.save(index);
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to remove pv property to index:  " + fileURI + " , no such index exits");
+            }
+        } catch (UnsupportedEncodingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to  remove pvProperty to index:  " + fileURI, e);
         }
     }
 
     @DeleteMapping("/{fileURI}")
     public void deleteIndex(@PathVariable String fileURI) {
-        if (waveformIndexRepository.checkExists(fileURI)) {
-            waveformIndexRepository.delete(fileURI);
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete index:  " + fileURI + " , no such index exits");
+        try {
+            if (waveformIndexRepository.checkExists(URLDecoder.decode(fileURI, "UTF-8"))) {
+                waveformIndexRepository.delete(fileURI);
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Failed to delete index:  " + fileURI + " , no such index exits");
+            }
+        } catch (UnsupportedEncodingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to delete index:  " + fileURI, e);
         }
     }
 
