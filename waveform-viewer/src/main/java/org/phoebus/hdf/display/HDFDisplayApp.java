@@ -38,7 +38,9 @@ public class HDFDisplayApp implements AppResourceDescriptor {
 
     @Override
     public AppInstance create(URI resource) {
-        return new HDFDisplay(this);
+        HDFDisplay display = new HDFDisplay(this);
+        display.setResource(resource);
+        return display;
     }
 
     @Override

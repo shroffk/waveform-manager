@@ -15,8 +15,12 @@
                   <TreeTableView fx:id="treeTableView" onContextMenuRequested="#createContextMenu" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <columns>
                       <TreeTableColumn fx:id="name" minWidth="200.0" prefWidth="-1.0" text="Name:" />
-                      <TreeTableColumn fx:id="plot" minWidth="100.0" prefWidth="-1.0" text="Plot" />
+                        <TreeTableColumn fx:id="timeStamp" prefWidth="75.0" text="TimeStamp:" />
+                      <TreeTableColumn fx:id="plot" minWidth="100.0" prefWidth="-1.0" text="Plot:" />
                     </columns>
+                     <columnResizePolicy>
+                        <TreeTableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                     </columnResizePolicy>
                   </TreeTableView>
                </children>
             </AnchorPane>

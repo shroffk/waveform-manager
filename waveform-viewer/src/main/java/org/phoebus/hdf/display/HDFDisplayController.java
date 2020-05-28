@@ -142,6 +142,32 @@ public class HDFDisplayController {
                 };
             }
         });
+
+        timeStamp.setCellValueFactory(
+                (Callback<TreeTableColumn.CellDataFeatures<HDFDisplayTreeNode, HDFDisplayTreeNode>, ObservableValue<HDFDisplayTreeNode>>) p -> {
+                    return new SimpleObjectProperty<HDFDisplayTreeNode>(p.getValue().getValue());
+                });
+
+
+        timeStamp.setCellFactory(new Callback<TreeTableColumn, TreeTableCell>() {
+            @Override
+            public TreeTableCell call(TreeTableColumn param) {
+                return new TreeTableCell<HDFDisplayTreeNode, HDFDisplayTreeNode>() {
+
+                    @Override
+                    protected void updateItem(HDFDisplayTreeNode item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty) {
+                            setText(null);
+                            setGraphic(null);
+                        } else {
+                            setText(item.getTimestamp());
+                        }
+                    }
+                };
+            }
+        });
+
         treeTableView.getSelectionModel().setSelectionMode(
                 SelectionMode.MULTIPLE
         );
