@@ -21,6 +21,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.util.Callback;
@@ -36,23 +37,30 @@ import org.phoebus.app.waveform.index.viewer.WaveformIndexViewerPreferences;
 import org.phoebus.app.waveform.index.viewer.entity.WaveformFileAttribute;
 import org.phoebus.app.waveform.index.viewer.entity.WaveformFilePVProperty;
 import org.phoebus.app.waveform.index.viewer.entity.WaveformIndex;
+import org.phoebus.core.types.ProcessVariable;
+import org.phoebus.framework.adapter.AdapterService;
 import org.phoebus.framework.jobs.Job;
 import org.phoebus.framework.jobs.JobManager;
 import org.phoebus.framework.jobs.JobMonitor;
 import org.phoebus.framework.jobs.JobRunnable;
+import org.phoebus.framework.selection.SelectionService;
+import org.phoebus.ui.application.ContextMenuService;
 import org.phoebus.ui.application.PhoebusApplication;
 import org.phoebus.ui.javafx.ImageCache;
+import org.phoebus.ui.spi.ContextMenuEntry;
 
 import javax.ws.rs.core.MediaType;
 import java.io.File;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import static org.phoebus.hdf.display.HDFFileProcessor.HDFDisplayTreeNode;
 import static org.phoebus.hdf.display.HDFDisplayApp.logger;
@@ -82,7 +90,8 @@ public class HDFDisplayController {
     private final MenuItem removePVsFromPlot = new MenuItem("Remove PVs to Plot", ImageCache.getImageView(PhoebusApplication.class, "/icons/delete.png"));
 
 //    private final Menu openWith = new Menu(Messages.OpenWith, ImageCache.getImageView(PhoebusApplication.class, "/icons/fldr_obj.png"));
-    private final ContextMenu contextMenu = new ContextMenu();
+    private final ContextMenu tableContextMenu = new ContextMenu();
+    private final ContextMenu plotContextMenu = new ContextMenu();
 
     // HDF file
     private File file;
@@ -232,7 +241,7 @@ public class HDFDisplayController {
     public void createContextMenu(ContextMenuEvent e) {
         final ObservableList<TreeItem<HDFDisplayTreeNode>> selectedItems = treeTableView.selectionModelProperty().getValue().getSelectedItems();
 
-        contextMenu.getItems().clear();
+        tableContextMenu.getItems().clear();
         addPVs2Plot.setOnAction(event -> {
             selectedItems.stream().forEach(item -> {
                 item.getValue().isPlotted().set(true);
@@ -243,14 +252,34 @@ public class HDFDisplayController {
                 item.getValue().isPlotted().set(false);
             });
         });
-        contextMenu.getItems().add(addPVs2Plot);
-        contextMenu.getItems().add(removePVsFromPlot);
+        tableContextMenu.getItems().add(addPVs2Plot);
+        tableContextMenu.getItems().add(removePVsFromPlot);
 
-        contextMenu.show(treeTableView.getScene().getWindow(), e.getScreenX(), e.getScreenY());
+        tableContextMenu.show(treeTableView.getScene().getWindow(), e.getScreenX(), e.getScreenY());
     }
 
     @FXML
     public void createPlotContextMenu(ContextMenuEvent e) {
+        plotContextMenu.getItems().clear();
+        SelectionService.getInstance().setSelection(rtTimePlot, traces.keySet().stream().map((trace) ->
+        {
+            return new ProcessVariable(trace);
+        }).collect(Collectors.toList()));
+
+        List<ContextMenuEntry> contextEntries = ContextMenuService.getInstance().listSupportedContextMenuEntries();
+        contextEntries.forEach(entry -> {
+            MenuItem item = new MenuItem(entry.getName(), new ImageView(entry.getIcon()));
+            item.setOnAction(event -> {
+                try {
+                    entry.callWithSelection(SelectionService.getInstance().getSelection());
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+            });
+            plotContextMenu.getItems().add(item);
+        });
+
+        plotContextMenu.show(rtTimePlot.getScene().getWindow(), e.getScreenX(), e.getScreenY());
 
     }
     // A list of traces mapped to the associated selected pv's in the tree
