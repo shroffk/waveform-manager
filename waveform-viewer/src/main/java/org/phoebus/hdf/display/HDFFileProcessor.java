@@ -9,6 +9,9 @@ import hdf.object.h5.H5Group;
 import hdf.object.h5.H5ScalarDS;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.TreeItem;
+import org.phoebus.app.waveform.index.viewer.entity.WaveformFileAttribute;
+import org.phoebus.app.waveform.index.viewer.entity.WaveformFilePVProperty;
+import org.phoebus.app.waveform.index.viewer.entity.WaveformIndex;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -19,17 +22,41 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.phoebus.hdf.display.HDFDisplayApp.logger;
 public class HDFFileProcessor {
 
+    // HDF group names
     private static String PV_NAME = "/PV_Names";
     private static String PV_TIMESTAMP = "/PV_TimeStamp";
     private static String WFDATA = "/WFdata";
 
-    static TreeItem processFile(File file) throws Exception {
+    // waveform index service pv property field names
+    private static final String plot = "plot";
+    private static final WaveformFileAttribute plotAttribute = new WaveformFileAttribute("plot", "true");
 
-        TreeItem treeRoot = new TreeItem(new HDFDisplayTreeNode(false, file.getName(), null, null));
+    //
+    private static Map<String, Boolean> pvMap = Collections.emptyMap();
+
+    static TreeItem processFile(File file) throws Exception {
+        return processFile(file, null);
+    }
+
+    static TreeItem processFile(File file, WaveformIndex waveformIndex) throws Exception {
+
+        if (waveformIndex != null) {
+            pvMap = waveformIndex.getPvProperties().stream().collect(
+                    Collectors.toMap(
+                            WaveformFilePVProperty::getPvName,
+                            (waveformFilePVProperty) -> {
+                                return waveformFilePVProperty.getAttributes().contains(plotAttribute);
+                            }));
+        }
+
+        TreeItem treeRoot = new TreeItem(new HDFDisplayTreeNode(false, file.getName(), null, null, false));
 
         final H5File h5file = new H5File(file.getAbsolutePath(), FileFormat.READ);
         long file_id = -1;
@@ -42,12 +69,13 @@ public class HDFFileProcessor {
 
                 if (h.getFullName().equalsIgnoreCase(PV_NAME)) {
                     ((H5Group) h).getMemberList().stream().forEach(m -> {
+                        boolean expandRoot = false;
                         if (m instanceof Dataset) {
                             Dataset data = (Dataset) m;
                             String groupName = data.getName();
                             logger.info("Processing group: " + groupName);
 
-                            TreeItem groupItem = new TreeItem(new HDFDisplayTreeNode(false, groupName, null, null));
+                            TreeItem groupItem = new TreeItem(new HDFDisplayTreeNode(false, groupName, null, null, false));
 
                             try {
                                 // read the pv names
@@ -68,13 +96,19 @@ public class HDFFileProcessor {
                                     long[] startDims2 = pvData.getStartDims();
                                     startDims2[0] = i;
                                     startDims2[1] = 0;
+
+                                    if (pvMap.getOrDefault(names[i], false)) {
+                                        groupItem.setExpanded(true);
+                                        expandRoot = true;
+                                    }
                                     groupItem.getChildren().add(new TreeItem<>(
-                                            new HDFDisplayTreeNode(true, names[i], timestamps[i], pvData)
+                                            new HDFDisplayTreeNode(true, names[i], timestamps[i], pvData, pvMap.getOrDefault(names[i], false))
                                     ));
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
+                            treeRoot.setExpanded(expandRoot);
                             treeRoot.getChildren().add(groupItem);
                         }
                     });
@@ -94,13 +128,14 @@ public class HDFFileProcessor {
 
         private final H5ScalarDS data;
 
-        private SimpleBooleanProperty plotted = new SimpleBooleanProperty(false);
+        private final SimpleBooleanProperty plotted;
 
-        private HDFDisplayTreeNode(boolean isLeaf, String name, String timestamp, H5ScalarDS data) {
+        private HDFDisplayTreeNode(boolean isLeaf, String name, String timestamp, H5ScalarDS data, boolean plotted) {
             this.isLeaf = isLeaf;
             this.name = name;
             this.timestamp = timestamp;
             this.data = data;
+            this.plotted  = new SimpleBooleanProperty(plotted);
         }
 
         public SimpleBooleanProperty isPlotted() {
