@@ -8,6 +8,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import hdf.object.h5.H5ScalarDS;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -56,6 +57,7 @@ import java.net.URLEncoder;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -89,7 +91,7 @@ public class HDFDisplayController {
     private final MenuItem addPVs2Plot = new MenuItem("Add PVs to Plot", ImageCache.getImageView(PhoebusApplication.class, "/icons/add.png"));
     private final MenuItem removePVsFromPlot = new MenuItem("Remove PVs to Plot", ImageCache.getImageView(PhoebusApplication.class, "/icons/delete.png"));
 
-//    private final Menu openWith = new Menu(Messages.OpenWith, ImageCache.getImageView(PhoebusApplication.class, "/icons/fldr_obj.png"));
+    //    private final Menu openWith = new Menu(Messages.OpenWith, ImageCache.getImageView(PhoebusApplication.class, "/icons/fldr_obj.png"));
     private final ContextMenu tableContextMenu = new ContextMenu();
     private final ContextMenu plotContextMenu = new ContextMenu();
 
@@ -159,28 +161,26 @@ public class HDFDisplayController {
 
                 return new TreeTableCell<HDFDisplayTreeNode, HDFDisplayTreeNode>() {
 
-
                     @Override
                     protected void updateItem(HDFDisplayTreeNode item, boolean empty) {
                         super.updateItem(item, empty);
                         if (empty) {
                             setGraphic(null);
                         } else {
-                            if(item.isLeaf()){
-                                final CheckBox checkBox = new CheckBox();
+                            if (item.isLeaf()) {
+                                CheckBox checkBox = new CheckBox();
                                 SimpleBooleanProperty plottingProperty = item.isPlotted();
-                                plottingProperty.addListener((observable, oldValue, newValue) -> {
-                                    if (newValue.booleanValue()) {
+
+                                checkBox.selectedProperty().bindBidirectional(plottingProperty);
+                                checkBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
+                                    if (newValue.booleanValue() && !oldValue.booleanValue()) {
                                         addToPlot(item);
-                                    } else {
+                                    } else if (!newValue.booleanValue() && oldValue.booleanValue()) {
                                         removeFromPlot(item);
                                     }
                                 });
-                                checkBox.selectedProperty().bindBidirectional(plottingProperty);
                                 if (plottingProperty.get()) {
                                     addToPlot(item);
-                                } else {
-                                    removeFromPlot(item);
                                 }
                                 setGraphic(checkBox);
                             } else {
@@ -282,12 +282,17 @@ public class HDFDisplayController {
         plotContextMenu.show(rtTimePlot.getScene().getWindow(), e.getScreenX(), e.getScreenY());
 
     }
+
     // A list of traces mapped to the associated selected pv's in the tree
     private final Map<String, Trace> traces = new ConcurrentHashMap<>();
     final RGBFactory colors = new RGBFactory();
 
+    private final WaveformFileAttribute waveformFileAttributeTrue = new WaveformFileAttribute("plot", "true");
+    private final WaveformFileAttribute waveformFileAttributeFalse = new WaveformFileAttribute("plot", "false");
+
     public synchronized void addToPlot(HDFDisplayTreeNode item) {
-        if(!traces.containsKey(item.getName())){
+
+        if (!traces.containsKey(item.getName())) {
             try {
                 final ArrayPlotDataProvider<Instant> data = new ArrayPlotDataProvider<>();
                 H5ScalarDS rawData = item.getData();
@@ -295,7 +300,7 @@ public class HDFDisplayController {
 
                 float[] d1 = (float[]) rawData.getData();
                 for (int i = 0; i < d1.length; i++) {
-                    data.add(new SimpleDataItem<>(item.getInstant().plusMillis(i*1), d1[i]));
+                    data.add(new SimpleDataItem<>(item.getInstant().plusMillis(i * 1), d1[i]));
                 }
                 Trace<Instant> trace = rtTimePlot.addTrace(item.getName(), "socks", data, colors.next(), TraceType.LINES, 3, LineStyle.SOLID, PointType.NONE, 3, 0);
                 traces.put(item.getName(), trace);
@@ -307,50 +312,60 @@ public class HDFDisplayController {
             }
         }
 
-        if(waveformIndex != null) {
-            JobRunnable addPVProperty = new JobRunnable() {
-                @Override
-                public void run(JobMonitor jobMonitor) throws Exception {
-                    WaveformFilePVProperty pvProperty = new WaveformFilePVProperty(item.getName());
-                    pvProperty.addAttribute(new WaveformFileAttribute("plot", "true"));
-                    try {
-                        service.path("add/pvproperties")
-                                .queryParam("fileURI", file.toURI().toString())
-                                .type(MediaType.APPLICATION_JSON)
-                                .post(mapper.writeValueAsString(pvProperty));
-                        retrieveIndex();
-                    } catch (JsonProcessingException e) {
-                        e.printStackTrace();
+        if (waveformIndex != null) {
+            WaveformFilePVProperty pvProperty = new WaveformFilePVProperty(item.getName());
+            pvProperty.addAttribute(new WaveformFileAttribute("plot", "true"));
+            if (!waveformIndex.getPvProperties().contains(pvProperty)) {
+                JobRunnable addPVProperty = new JobRunnable() {
+                    @Override
+                    public void run(JobMonitor jobMonitor) throws Exception {
+                        try {
+                            service.path("add/pvproperties")
+                                    .queryParam("fileURI", file.toURI().toString())
+                                    .type(MediaType.APPLICATION_JSON)
+                                    .post(mapper.writeValueAsString(pvProperty));
+                            retrieveIndex();
+                        } catch (JsonProcessingException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-            };
-            JobManager.schedule("add pv property to waveform Index : ", addPVProperty);
+                };
+                JobManager.schedule("add " + item.getName() + " pv property to waveform Index : ", addPVProperty);
+            }
         }
     }
 
     private void removeFromPlot(HDFDisplayTreeNode item) {
-        if(traces.containsKey(item.getName())){
+        if (traces.containsKey(item.getName())) {
             rtTimePlot.removeTrace(traces.remove(item.getName()));
         }
 
-        if(waveformIndex != null) {
-            JobRunnable removePVProperty = new JobRunnable() {
-                @Override
-                public void run(JobMonitor jobMonitor) throws Exception {
-                    WaveformFilePVProperty pvProperty = new WaveformFilePVProperty(item.getName());
-                    pvProperty.addAttribute(new WaveformFileAttribute("plot", "false"));
-                    try {
-                        service.path("add/pvproperties")
-                                .queryParam("fileURI", file.toURI().toString())
-                                .type(MediaType.APPLICATION_JSON)
-                                .post(mapper.writeValueAsString(pvProperty));
-                        retrieveIndex();
-                    } catch (JsonProcessingException e) {
-                        e.printStackTrace();
+        if (waveformIndex != null) {
+            Set<WaveformFilePVProperty> foundProperty = waveformIndex.getPvProperties().stream()
+                    .filter((pvProperty) -> {
+                        return pvProperty.getPvName().equalsIgnoreCase(item.getName()) &&
+                                pvProperty.getAttributes().contains(waveformFileAttributeTrue);
+                    }).collect(Collectors.toSet());
+
+            if (!foundProperty.isEmpty()) {
+                JobRunnable removePVProperty = new JobRunnable() {
+                    @Override
+                    public void run(JobMonitor jobMonitor) throws Exception {
+                        try {
+                            WaveformFilePVProperty pvProperty = new WaveformFilePVProperty(item.getName());
+                            pvProperty.addAttribute(new WaveformFileAttribute("plot", "false"));
+                            service.path("add/pvproperties")
+                                    .queryParam("fileURI", file.toURI().toString())
+                                    .type(MediaType.APPLICATION_JSON)
+                                    .post(mapper.writeValueAsString(pvProperty));
+                            retrieveIndex();
+                        } catch (JsonProcessingException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-            };
-            JobManager.schedule("remove pv property waveform Index : ", removePVProperty);
+                };
+                JobManager.schedule("remove " + item.getName() + " pv property waveform Index : ", removePVProperty);
+            }
         }
     }
 
@@ -376,7 +391,7 @@ public class HDFDisplayController {
         if (service != null) {
             try {
                 this.waveformIndex = mapper.readValue(
-                        service.queryParam("fileURI", URLEncoder.encode(this.file.toURI().toString(),"UTF-8")).get(String.class),
+                        service.queryParam("fileURI", URLEncoder.encode(this.file.toURI().toString(), "UTF-8")).get(String.class),
                         WaveformIndex.class);
             } catch (Exception e) {
                 logger.log(Level.WARNING, "failed to retrieve the index info from the waveform file index service." + e.getMessage(), e);

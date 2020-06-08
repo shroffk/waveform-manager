@@ -183,6 +183,7 @@ public class WaveformIndexRepository {
         try {
             IndexRequest indexRequest = new IndexRequest(ES_WF_INDEX, ES_WF_TYPE, entity.getFile().toString())
                     .source(mapper.writeValueAsBytes(entity), XContentType.JSON);
+            indexRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
             IndexResponse response = client.index(indexRequest, RequestOptions.DEFAULT);
             if (response.getResult().equals(Result.CREATED) ||
                 response.getResult().equals(Result.UPDATED)) {
