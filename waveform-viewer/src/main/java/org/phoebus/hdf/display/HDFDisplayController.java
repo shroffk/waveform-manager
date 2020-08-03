@@ -271,7 +271,7 @@ public class HDFDisplayController {
             MenuItem item = new MenuItem(entry.getName(), new ImageView(entry.getIcon()));
             item.setOnAction(event -> {
                 try {
-                    entry.callWithSelection(SelectionService.getInstance().getSelection());
+                    entry.call(SelectionService.getInstance().getSelection());
                 } catch (Exception e1) {
                     e1.printStackTrace();
                 }
