@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>hdf-core</artifactId>
+    <artifactId>hdf-util</artifactId>
 
     <dependencies>
 
