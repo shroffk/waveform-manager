@@ -14,16 +14,15 @@ import org.phoebus.app.waveform.index.viewer.entity.WaveformFilePVProperty;
 import org.phoebus.app.waveform.index.viewer.entity.WaveformIndex;
 
 import java.io.File;
-import java.lang.reflect.Field;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.phoebus.hdf.display.HDFDisplayApp.logger;
@@ -34,11 +33,16 @@ public class HDFFileProcessor {
     private static String PV_TIMESTAMP = "/PV_TimeStamp";
     private static String WFDATA = "/WFdata";
 
+    // Regular expression for cell
+    private static final Pattern cellPattern = Pattern.compile("^.*?:(.*?)\\-.*");
+    // Regular expression for device name
+    private static final Pattern devicePattern = Pattern.compile(".*\\{(.*)\\}.*");
+
     // waveform index service pv property field names
     private static final String plot = "plot";
     private static final WaveformFileAttribute plotAttribute = new WaveformFileAttribute("plot", "true");
 
-    //
+    // pv plot/unplot info from the waveform index service
     private static Map<String, Boolean> pvMap = Collections.emptyMap();
 
     static TreeItem processFile(File file) throws Exception {
@@ -75,7 +79,7 @@ public class HDFFileProcessor {
                             String groupName = data.getName();
                             logger.info("Processing group: " + groupName);
 
-                            TreeItem groupItem = new TreeItem(new HDFDisplayTreeNode(false, groupName, null, null, false));
+                            TreeItem<HDFDisplayTreeNode> groupItem = new TreeItem(new HDFDisplayTreeNode(false, groupName, null, null, false));
 
                             try {
                                 // read the pv names
@@ -83,8 +87,7 @@ public class HDFFileProcessor {
                                 String[] names = (String[]) pvNames.getData();
 
                                 // read the time stamps for each pv
-                                H5ScalarDS pvTimestamps = new H5ScalarDS(h5file, groupName,
-                                        PV_TIMESTAMP);
+                                H5ScalarDS pvTimestamps = new H5ScalarDS(h5file, groupName, PV_TIMESTAMP);
                                 String[] timestamps = (String[]) pvTimestamps.getData();
 
                                 for (int i=0; i < names.length; i++) {
@@ -97,13 +100,60 @@ public class HDFFileProcessor {
                                     startDims2[0] = i;
                                     startDims2[1] = 0;
 
-                                    if (pvMap.getOrDefault(names[i], false)) {
+                                    String pvName = names[i];
+
+                                    if (pvMap.getOrDefault(pvName, false)) {
                                         groupItem.setExpanded(true);
                                         expandRoot = true;
                                     }
-                                    groupItem.getChildren().add(new TreeItem<>(
-                                            new HDFDisplayTreeNode(true, names[i], timestamps[i], pvData, pvMap.getOrDefault(names[i], false))
-                                    ));
+
+                                    // Add cell node
+                                    Matcher cellMatcher = cellPattern.matcher(pvName);
+                                    if (cellMatcher.matches()) {
+                                        final String cell = cellMatcher.group(1);
+                                        if (cell != null && !cell.isBlank()) {
+                                            Optional<TreeItem<HDFDisplayTreeNode>> foundCellItem = groupItem.getChildren().stream().filter(node -> {
+                                                return node.getValue().getName().equals(cell);
+                                            }).findFirst();
+
+                                            TreeItem<HDFDisplayTreeNode> cellItem;
+                                            if (foundCellItem.isEmpty()) {
+                                                cellItem = new TreeItem<HDFDisplayTreeNode>
+                                                            (new HDFDisplayTreeNode(false, cell, null, null, false));
+                                                groupItem.getChildren().add(cellItem);
+                                            } else{
+                                                cellItem = foundCellItem.get();
+                                            }
+
+                                            // Add device
+                                            Matcher deviceMatcher = devicePattern.matcher(pvName);
+                                            if (deviceMatcher.matches()) {
+                                                final String device = deviceMatcher.group(1);
+                                                if(device != null && !device.isBlank()) {
+                                                    Optional<TreeItem<HDFDisplayTreeNode>> foundDeviceItem = cellItem.getChildren().stream().filter(node -> {
+                                                        return node.getValue().getName().equals(device);
+                                                    }).findFirst();
+
+                                                    TreeItem<HDFDisplayTreeNode> deviceItem;
+                                                    if (foundDeviceItem.isEmpty()) {
+                                                        deviceItem = new TreeItem<HDFDisplayTreeNode>
+                                                                (new HDFDisplayTreeNode(false, device, null, null, false));
+                                                        cellItem.getChildren().add(deviceItem);
+                                                    } else{
+                                                        deviceItem = foundDeviceItem.get();
+                                                    }
+                                                    deviceItem.getChildren().add(new TreeItem<>(
+                                                            new HDFDisplayTreeNode(true, pvName, timestamps[i], pvData, pvMap.getOrDefault(pvName, false))
+                                                    ));
+                                                }
+
+                                            }
+                                        }
+                                    } else {
+                                        groupItem.getChildren().add(new TreeItem<>(
+                                                new HDFDisplayTreeNode(true, pvName, timestamps[i], pvData, pvMap.getOrDefault(pvName, false))
+                                        ));
+                                    }
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();

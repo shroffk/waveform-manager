@@ -19,7 +19,9 @@
   </scm>
 
   <modules>
+    <module>hdf-util</module>
     <module>service-waveform-index</module>
+    <module>waveform-index-viewer</module>
     <module>waveform-viewer</module>
   </modules>
 
