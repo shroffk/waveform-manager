@@ -13,6 +13,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
@@ -57,6 +58,7 @@ import java.net.URLEncoder;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -77,6 +79,8 @@ public class HDFDisplayController {
 
     @FXML
     TextField filter;
+    @FXML
+    Button filterButton;
 
     @FXML
     TreeTableView<HDFDisplayTreeNode> treeTableView;
@@ -369,16 +373,16 @@ public class HDFDisplayController {
         }
     }
 
-
     public void setFile(File file) {
         this.file = file;
         retrieveIndex();
         constructTree();
     }
 
+    @FXML
     public void constructTree() {
-        try {
-            TreeItem root = HDFFileProcessor.processFile(this.file, this.waveformIndex);
+        try {            // parse the filter to convert the
+            TreeItem root = HDFFileProcessor.processFile(this.file, this.waveformIndex, Optional.of(this.filter.getText()));
             treeTableView.setRoot(root);
         } catch (Exception e) {
             e.printStackTrace();

@@ -46,10 +46,14 @@ public class HDFFileProcessor {
     private static Map<String, Boolean> pvMap = Collections.emptyMap();
 
     static TreeItem processFile(File file) throws Exception {
-        return processFile(file, null);
+        return processFile(file, null, Optional.empty());
     }
 
-    static TreeItem processFile(File file, WaveformIndex waveformIndex) throws Exception {
+    static TreeItem processFile (File file, WaveformIndex waveformIndex) throws Exception {
+        return processFile(file, waveformIndex, Optional.empty());
+    }
+
+    static TreeItem processFile(File file, WaveformIndex waveformIndex, Optional<String> filter) throws Exception {
 
         if (waveformIndex != null) {
             pvMap = waveformIndex.getPvProperties().stream().collect(
@@ -107,53 +111,57 @@ public class HDFFileProcessor {
                                         expandRoot = true;
                                     }
 
-                                    // Add cell node
-                                    Matcher cellMatcher = cellPattern.matcher(pvName);
-                                    if (cellMatcher.matches()) {
-                                        final String cell = cellMatcher.group(1);
-                                        if (cell != null && !cell.isBlank()) {
-                                            Optional<TreeItem<HDFDisplayTreeNode>> foundCellItem = groupItem.getChildren().stream().filter(node -> {
-                                                return node.getValue().getName().equals(cell);
-                                            }).findFirst();
+                                    // Filter the pv names based on the users specified filter
+                                    if( filter.isEmpty() || pvName.matches(wildcardToRegex(filter.get()))) {
+                                        // Add cell node
+                                        Matcher cellMatcher = cellPattern.matcher(pvName);
+                                        if (cellMatcher.matches()) {
+                                            final String cell = cellMatcher.group(1);
+                                            if (cell != null && !cell.isBlank()) {
+                                                Optional<TreeItem<HDFDisplayTreeNode>> foundCellItem = groupItem.getChildren().stream().filter(node -> {
+                                                    return node.getValue().getName().equals(cell);
+                                                }).findFirst();
 
-                                            TreeItem<HDFDisplayTreeNode> cellItem;
-                                            if (foundCellItem.isEmpty()) {
-                                                cellItem = new TreeItem<HDFDisplayTreeNode>
+                                                TreeItem<HDFDisplayTreeNode> cellItem;
+                                                if (foundCellItem.isEmpty()) {
+                                                    cellItem = new TreeItem<HDFDisplayTreeNode>
                                                             (new HDFDisplayTreeNode(false, cell, null, null, false));
-                                                groupItem.getChildren().add(cellItem);
-                                            } else{
-                                                cellItem = foundCellItem.get();
-                                            }
-
-                                            // Add device
-                                            Matcher deviceMatcher = devicePattern.matcher(pvName);
-                                            if (deviceMatcher.matches()) {
-                                                final String device = deviceMatcher.group(1);
-                                                if(device != null && !device.isBlank()) {
-                                                    Optional<TreeItem<HDFDisplayTreeNode>> foundDeviceItem = cellItem.getChildren().stream().filter(node -> {
-                                                        return node.getValue().getName().equals(device);
-                                                    }).findFirst();
-
-                                                    TreeItem<HDFDisplayTreeNode> deviceItem;
-                                                    if (foundDeviceItem.isEmpty()) {
-                                                        deviceItem = new TreeItem<HDFDisplayTreeNode>
-                                                                (new HDFDisplayTreeNode(false, device, null, null, false));
-                                                        cellItem.getChildren().add(deviceItem);
-                                                    } else{
-                                                        deviceItem = foundDeviceItem.get();
-                                                    }
-                                                    deviceItem.getChildren().add(new TreeItem<>(
-                                                            new HDFDisplayTreeNode(true, pvName, timestamps[i], pvData, pvMap.getOrDefault(pvName, false))
-                                                    ));
+                                                    groupItem.getChildren().add(cellItem);
+                                                } else{
+                                                    cellItem = foundCellItem.get();
                                                 }
 
+                                                // Add device
+                                                Matcher deviceMatcher = devicePattern.matcher(pvName);
+                                                if (deviceMatcher.matches()) {
+                                                    final String device = deviceMatcher.group(1);
+                                                    if(device != null && !device.isBlank()) {
+                                                        Optional<TreeItem<HDFDisplayTreeNode>> foundDeviceItem = cellItem.getChildren().stream().filter(node -> {
+                                                            return node.getValue().getName().equals(device);
+                                                        }).findFirst();
+
+                                                        TreeItem<HDFDisplayTreeNode> deviceItem;
+                                                        if (foundDeviceItem.isEmpty()) {
+                                                            deviceItem = new TreeItem<HDFDisplayTreeNode>
+                                                                    (new HDFDisplayTreeNode(false, device, null, null, false));
+                                                            cellItem.getChildren().add(deviceItem);
+                                                        } else{
+                                                            deviceItem = foundDeviceItem.get();
+                                                        }
+                                                        deviceItem.getChildren().add(new TreeItem<>(
+                                                                new HDFDisplayTreeNode(true, pvName, timestamps[i], pvData, pvMap.getOrDefault(pvName, false))
+                                                        ));
+                                                    }
+
+                                                }
                                             }
+                                        } else {
+                                            groupItem.getChildren().add(new TreeItem<>(
+                                                    new HDFDisplayTreeNode(true, pvName, timestamps[i], pvData, pvMap.getOrDefault(pvName, false))
+                                            ));
                                         }
-                                    } else {
-                                        groupItem.getChildren().add(new TreeItem<>(
-                                                new HDFDisplayTreeNode(true, pvName, timestamps[i], pvData, pvMap.getOrDefault(pvName, false))
-                                        ));
                                     }
+
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -166,6 +174,15 @@ public class HDFFileProcessor {
             }
         });
         return treeRoot;
+    }
+
+    /**
+     * Convert the string from wildcard to regex
+     * @param s - pattern string with wildcards
+     * @return pattern string with wildcards converted to regex
+     */
+    private static String wildcardToRegex(String s) {
+        return ".*" + s.replace("*", ".*").replace("?",".?") + ".*";
     }
 
 

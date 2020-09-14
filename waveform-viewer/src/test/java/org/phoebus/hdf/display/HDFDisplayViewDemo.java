@@ -18,7 +18,7 @@ public class HDFDisplayViewDemo extends ApplicationWrapper {
     }
 
     //TODO need to make a reasonably sized test file and include it in the test resources
-    private static String FILE = "C:\\hdf5\\Jan-01-2020.h5";
+    private static String FILE = "C:\\hdf5\\Test.h5";
 
     @Override
     public void start(Stage stage) throws Exception {
