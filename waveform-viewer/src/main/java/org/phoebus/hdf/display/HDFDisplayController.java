@@ -8,7 +8,6 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import hdf.object.h5.H5ScalarDS;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -35,12 +34,11 @@ import org.csstudio.javafx.rtplot.TraceType;
 import org.csstudio.javafx.rtplot.data.ArrayPlotDataProvider;
 import org.csstudio.javafx.rtplot.data.SimpleDataItem;
 import org.csstudio.javafx.rtplot.util.RGBFactory;
+import org.epics.waveform.index.util.entity.WaveformFileAttribute;
+import org.epics.waveform.index.util.entity.WaveformFilePVProperty;
+import org.epics.waveform.index.util.entity.WaveformIndex;
 import org.phoebus.app.waveform.index.viewer.WaveformIndexViewerPreferences;
-import org.phoebus.app.waveform.index.viewer.entity.WaveformFileAttribute;
-import org.phoebus.app.waveform.index.viewer.entity.WaveformFilePVProperty;
-import org.phoebus.app.waveform.index.viewer.entity.WaveformIndex;
 import org.phoebus.core.types.ProcessVariable;
-import org.phoebus.framework.adapter.AdapterService;
 import org.phoebus.framework.jobs.Job;
 import org.phoebus.framework.jobs.JobManager;
 import org.phoebus.framework.jobs.JobMonitor;
@@ -66,8 +64,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-import static org.phoebus.hdf.display.HDFFileProcessor.HDFDisplayTreeNode;
 import static org.phoebus.hdf.display.HDFDisplayApp.logger;
+import static org.phoebus.hdf.display.HDFFileProcessor.HDFDisplayTreeNode;
 
 public class HDFDisplayController {
 

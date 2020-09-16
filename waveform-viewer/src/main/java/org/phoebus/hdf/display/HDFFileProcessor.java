@@ -9,9 +9,9 @@ import hdf.object.h5.H5Group;
 import hdf.object.h5.H5ScalarDS;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.TreeItem;
-import org.phoebus.app.waveform.index.viewer.entity.WaveformFileAttribute;
-import org.phoebus.app.waveform.index.viewer.entity.WaveformFilePVProperty;
-import org.phoebus.app.waveform.index.viewer.entity.WaveformIndex;
+import org.epics.waveform.index.util.entity.WaveformFileAttribute;
+import org.epics.waveform.index.util.entity.WaveformFilePVProperty;
+import org.epics.waveform.index.util.entity.WaveformIndex;
 
 import java.io.File;
 import java.time.Instant;

@@ -1,14 +1,14 @@
 package org.phoebus.services.waveform.index;
 
+import org.epics.waveform.index.util.entity.WaveformFileAttribute;
+import org.epics.waveform.index.util.entity.WaveformFilePVProperty;
+import org.epics.waveform.index.util.entity.WaveformFileProperty;
+import org.epics.waveform.index.util.entity.WaveformFileTag;
+import org.epics.waveform.index.util.entity.WaveformIndex;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.phoebus.services.waveform.index.entity.WaveformFileAttribute;
-import org.phoebus.services.waveform.index.entity.WaveformFilePVProperty;
-import org.phoebus.services.waveform.index.entity.WaveformFileProperty;
-import org.phoebus.services.waveform.index.entity.WaveformFileTag;
-import org.phoebus.services.waveform.index.entity.WaveformIndex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -20,7 +20,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 /**

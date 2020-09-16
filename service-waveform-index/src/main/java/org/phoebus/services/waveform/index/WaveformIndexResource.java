@@ -1,9 +1,9 @@
 package org.phoebus.services.waveform.index;
 
-import org.phoebus.services.waveform.index.entity.WaveformFilePVProperty;
-import org.phoebus.services.waveform.index.entity.WaveformFileProperty;
-import org.phoebus.services.waveform.index.entity.WaveformFileTag;
-import org.phoebus.services.waveform.index.entity.WaveformIndex;
+import org.epics.waveform.index.util.entity.WaveformFilePVProperty;
+import org.epics.waveform.index.util.entity.WaveformFileProperty;
+import org.epics.waveform.index.util.entity.WaveformFileTag;
+import org.epics.waveform.index.util.entity.WaveformIndex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.MultiValueMap;

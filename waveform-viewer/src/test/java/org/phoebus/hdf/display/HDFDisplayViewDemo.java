@@ -40,6 +40,7 @@ public class HDFDisplayViewDemo extends ApplicationWrapper {
         stage.show();
 
     }
+
     public static void addLibraryPath(String pathToAdd) throws Exception {
         Field usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
         usrPathsField.setAccessible(true);
