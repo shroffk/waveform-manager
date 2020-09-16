@@ -1,7 +1,9 @@
 package org.epics.waveform.index.util.entity;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -53,6 +55,9 @@ public class WaveformIndex {
     }
 
     public void addTag(WaveformFileTag tag) {
+        if (this.tags.isEmpty()) {
+            this.tags = new ArrayList<WaveformFileTag>();
+        }
         List<WaveformFileTag> existingTag = this.tags.stream().filter((t) -> {
             return t.getName().equals(tag.getName());
         }).collect(Collectors.toList());
@@ -75,11 +80,16 @@ public class WaveformIndex {
     }
 
     public void addProperty(WaveformFileProperty property) {
+        if (this.properties.isEmpty()) {
+            this.properties = new ArrayList<WaveformFileProperty>();
+        }
         this.properties.add(property);
     }
 
     public void removeProperty(String property) {
-        setProperties(this.properties.stream().filter(p -> { return !p.getName().equalsIgnoreCase(property); }).collect(Collectors.toList()));
+        setProperties(this.properties.stream().filter(p -> {
+            return !p.getName().equalsIgnoreCase(property);
+        }).collect(Collectors.toList()));
     }
 
     public List<WaveformFilePVProperty> getPvProperties() {
@@ -109,7 +119,9 @@ public class WaveformIndex {
     }
 
     public void removePvProperty(String pvProperty) {
-        setPvProperties(this.pvProperties.stream().filter(p -> { return !p.getPvName().equalsIgnoreCase(pvProperty); }).collect(Collectors.toList()));
+        setPvProperties(this.pvProperties.stream().filter(p -> {
+            return !p.getPvName().equalsIgnoreCase(pvProperty);
+        }).collect(Collectors.toList()));
     }
 
     @Override

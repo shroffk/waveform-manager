@@ -22,7 +22,7 @@
     <module>hdf-util</module>
     <module>waveform-index-util</module>
     <module>service-waveform-index</module>
-    <module>waveform-index-process-timestamp</module>
+    <module>waveform-index-process-trigger</module>
     <module>waveform-index-viewer</module>
     <module>waveform-viewer</module>
   </modules>
