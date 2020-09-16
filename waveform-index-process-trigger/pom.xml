@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>waveform-index-process-timestamp</artifactId>
+    <artifactId>waveform-index-process-trigger</artifactId>
 
     <dependencies>
         <dependency>
