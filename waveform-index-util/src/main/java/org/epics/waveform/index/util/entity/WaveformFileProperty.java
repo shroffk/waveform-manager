@@ -52,4 +52,12 @@ public class WaveformFileProperty {
     public int hashCode() {
         return Objects.hash(name, attributes);
     }
+
+    @Override
+    public String toString() {
+        return "WaveformFileProperty{" +
+                "name='" + name + '\'' +
+                ", attributes=" + attributes +
+                '}';
+    }
 }
