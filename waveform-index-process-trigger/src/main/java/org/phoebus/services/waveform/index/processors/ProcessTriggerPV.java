@@ -1,4 +1,4 @@
-package org.phoebus.services.waveform.index.timestamp;
+package org.phoebus.services.waveform.index.processors;
 
 import hdf.object.Dataset;
 import hdf.object.FileFormat;
@@ -24,26 +24,23 @@ import java.util.stream.Collectors;
 /**
  * Process the time stamp for the index file
  */
-public class ProcessTimestamp  implements ProcessWaveformIndex
+public class ProcessTriggerPV implements ProcessWaveformIndex
 {
-    private static final Logger logger = Logger.getLogger(ProcessTimestamp.class.getName());
-
-    private static final String time_pattern = "yyyyMMdd-HH:mm:ss.nnnnnn";
-    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern(time_pattern).withZone(ZoneId.systemDefault());
+    private static final Logger logger = Logger.getLogger(ProcessTriggerPV.class.getName());
 
     // HDF group names
     private static String TRIGGER = "/TRIGGER";
-    private static String TRIGGER_TIME_STAMPS = "Time_stamps";
+    private static String TRIGGER_PVS = "PV_names";
 
-    public static final String TRIGGER_TIME_PROPERTY = "Trigger_Timestamp";
-    public static final String TRIGGER_TIME_ATTRIBUTE = "epoch";
+    public static final String TRIGGER_PV_PROPERTY = "Trigger_PV";
+    public static final String TRIGGER_PV_NAME_ATTRIBUTE = "pv_name";
 
     @Override
     public WaveformIndex process(WaveformIndex index)
     {
         try
         {
-            WaveformFileProperty triggerTimeStampProperty = new WaveformFileProperty(TRIGGER_TIME_PROPERTY);
+            WaveformFileProperty triggerPVProperty = new WaveformFileProperty(TRIGGER_PV_PROPERTY);
 
             File file = new File(index.getFile());
             final H5File h5file = new H5File(file.getAbsolutePath(), FileFormat.READ);
@@ -59,30 +56,27 @@ public class ProcessTimestamp  implements ProcessWaveformIndex
                 {
                     if (h.getFullName().equalsIgnoreCase(TRIGGER))
                     {
-                        logger.info("Processing Tiggers ");
+                        logger.info("Processing Triggers ");
                         ((H5Group) h).getMemberList().stream().forEach(m -> {
                             if (m instanceof Dataset) {
                                 Dataset data = (Dataset) m;
                                 String groupName = data.getName();
-                                logger.info("Processing Trigger Timestamp : " + groupName);
-                                if(TRIGGER_TIME_STAMPS.equalsIgnoreCase(groupName))
+                                logger.info("Processing Trigger pvs : " + groupName);
+                                if(TRIGGER_PVS.equalsIgnoreCase(groupName))
                                 {
                                     // read the pv names
-                                    H5ScalarDS pvNames = new H5ScalarDS(h5file, groupName, data.getPath());
+                                    H5ScalarDS pvNamesData = new H5ScalarDS(h5file, groupName, data.getPath());
                                     try {
-                                        List<Instant> timestamps = List.of((String[]) pvNames.getData()).stream()
-                                                                    .map(TIME_FORMAT::parse)
-                                                                    .map(Instant::from)
-                                                                    .collect(Collectors.toList());
+                                        List<String> pvNames = List.of((String[]) pvNamesData.getData());
 
-                                        timestamps.forEach(t -> {
-                                            triggerTimeStampProperty.addAttribute(
-                                                    new WaveformFileAttribute(TRIGGER_TIME_ATTRIBUTE, String.valueOf(t.toEpochMilli())));
+                                        pvNames.forEach(pv -> {
+                                            triggerPVProperty.addAttribute(
+                                                    new WaveformFileAttribute(TRIGGER_PV_NAME_ATTRIBUTE, pv));
                                         });
-                                        logger.info("Processing Trigger timestamp : " + timestamps);
+                                        logger.info("Processing Trigger pv : " + pvNames);
                                     } catch (Exception e)
                                     {
-                                        logger.log(Level.WARNING, "Failed to process the trigger timestamp", e);
+                                        logger.log(Level.WARNING, "Failed to process the trigger pv ", e);
                                     }
                                 }
                             }
@@ -90,7 +84,7 @@ public class ProcessTimestamp  implements ProcessWaveformIndex
                     }
                 }
             });
-            index.addProperty(triggerTimeStampProperty);
+            index.addProperty(triggerPVProperty);
         }
         catch (Exception e)
         {
