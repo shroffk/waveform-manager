@@ -23,6 +23,7 @@
     <module>service-waveform-index</module>
     <module>waveform-index-viewer</module>
     <module>waveform-viewer</module>
+      <module>process-timestamp</module>
   </modules>
 
   <build>
