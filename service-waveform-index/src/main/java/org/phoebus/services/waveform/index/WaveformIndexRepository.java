@@ -27,6 +27,7 @@ import org.epics.waveform.index.util.entity.WaveformFilePVProperty;
 import org.epics.waveform.index.util.entity.WaveformFileProperty;
 import org.epics.waveform.index.util.entity.WaveformFileTag;
 import org.epics.waveform.index.util.entity.WaveformIndex;
+import org.epics.waveform.index.util.spi.ProcessWaveformIndex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,10 +39,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.ServiceLoader;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -71,6 +74,11 @@ public class WaveformIndexRepository {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
+
+    private static ServiceLoader<ProcessWaveformIndex> loader;
+    static {
+        loader = ServiceLoader.load(ProcessWaveformIndex.class);
+    }
     /**
      * Find the waveformIndex identified by fileURI
      * @param fileURI
@@ -181,6 +189,13 @@ public class WaveformIndexRepository {
      */
     public WaveformIndex save(WaveformIndex entity) {
         try {
+            // Process the entity using the registered processors
+            Iterator<ProcessWaveformIndex> iterator = loader.iterator();
+            while (iterator.hasNext()) {
+                ProcessWaveformIndex process = iterator.next();
+                entity = process.process(entity);
+            }
+
             IndexRequest indexRequest = new IndexRequest(ES_WF_INDEX, ES_WF_TYPE, entity.getFile().toString())
                     .source(mapper.writeValueAsBytes(entity), XContentType.JSON);
             indexRequest.setRefreshPolicy(WriteRequest.RefreshPolicy.IMMEDIATE);
