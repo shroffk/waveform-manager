@@ -36,6 +36,9 @@ public class WaveformIndexRepositoryIT {
     @Autowired
     private WaveformIndexRepository waveformIndexRepository;
 
+    private static ClassLoader classLoader = WaveformIndexRepositoryIT.class.getClassLoader();
+    private static File file = new File(classLoader.getResource("test_file.h5").getFile());
+
     @Test
     public void createWaveformIndex() throws IOException {
         File file = new File("test_file.h5");
@@ -125,7 +128,6 @@ public class WaveformIndexRepositoryIT {
 
     @Test
     public void addProperty() {
-        File file = new File("test_file.h5");
         WaveformIndex index = new WaveformIndex(file.toURI());
         WaveformIndex createdIndex = waveformIndexRepository.save(index);
 
