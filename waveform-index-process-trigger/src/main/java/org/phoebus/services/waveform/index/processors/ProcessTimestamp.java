@@ -11,6 +11,7 @@ import org.epics.waveform.index.util.entity.WaveformFileAttribute;
 import org.epics.waveform.index.util.entity.WaveformFileProperty;
 import org.epics.waveform.index.util.entity.WaveformIndex;
 import org.epics.waveform.index.util.spi.ProcessWaveformIndex;
+import org.phoebus.hdf.util.HDFConfigure;
 
 import java.io.File;
 import java.time.Instant;
@@ -46,10 +47,15 @@ public class ProcessTimestamp  implements ProcessWaveformIndex
             WaveformFileProperty triggerTimeStampProperty = new WaveformFileProperty(TRIGGER_TIME_PROPERTY);
 
             File file = new File(index.getFile());
+            if(!file.exists()) {
+                logger.log(Level.WARNING, "failed to find the file " + file.getName() + " for processing by the " + getClass().getName());
+                return index;
+            }
+            // Initialize hdf-util
+            HDFConfigure.initialize();
             final H5File h5file = new H5File(file.getAbsolutePath(), FileFormat.READ);
             long file_id = -1;
             file_id = h5file.open();
-
 
             HObject theRoot = h5file.getRootObject();
             Group root = (Group) theRoot;

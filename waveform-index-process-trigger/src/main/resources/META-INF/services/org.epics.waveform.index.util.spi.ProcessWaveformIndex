@@ -1,1 +1,2 @@
-org.phoebus.services.waveform.index.
+org.phoebus.services.waveform.index.processors.ProcessTimestamp
+org.phoebus.services.waveform.index.processors.ProcessTriggerPV
