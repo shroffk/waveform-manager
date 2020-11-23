@@ -32,7 +32,7 @@ public class WaveformIndexResource {
 
     @GetMapping("/info")
     public String info() {
-        return "Waveform Index service : version 4.6.4";
+        return "Waveform Index service : version 4.6.5";
     }
 
     /**

@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.epics</groupId>
   <artifactId>waveform-manager</artifactId>
-  <version>4.6.4</version>
+  <version>4.6.5</version>
   <name>A display for pv data from hdf files</name>
   <packaging>pom</packaging>
 
