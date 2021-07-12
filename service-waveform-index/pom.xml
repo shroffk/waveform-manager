@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.epics</groupId>
         <artifactId>waveform-manager</artifactId>
-        <version>4.6.5</version>
+        <version>4.6.6</version>
     </parent>
 
     <dependencyManagement>
@@ -61,12 +61,12 @@
         <dependency>
             <groupId>org.epics</groupId>
             <artifactId>waveform-index-util</artifactId>
-            <version>4.6.5</version>
+            <version>4.6.6</version>
         </dependency>
         <dependency>
             <groupId>org.epics</groupId>
             <artifactId>waveform-index-process-trigger</artifactId>
-            <version>4.6.5</version>
+            <version>4.6.6</version>
             <optional>true</optional>
         </dependency>
     </dependencies>

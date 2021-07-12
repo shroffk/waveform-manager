@@ -91,26 +91,22 @@ public class WaveformIndexViewerController {
     @FXML
     private void initialize() {
         serviceURL = URI.create(WaveformIndexViewerPreferences.waveform_index_url);
-        JobRunnable initializeService = new JobRunnable() {
-            @Override
-            public void run(JobMonitor jobMonitor) throws Exception {
-                if (!initialized.get()) {
-                    Client client = Client.create(new DefaultClientConfig());
-                    client.setFollowRedirects(true);
-                    service = client.resource(serviceURL.toString());
-                    logger.info("Successfully initialized the ");
-                    initialized.set(true);
-                }
-            }
-        };
-        Job job = JobManager.schedule("initialize waveform Index : ", initializeService);
+
+        // TODO shroffk initialization should be done off the UI thread
+        if (!initialized.get()) {
+            Client client = Client.create(new DefaultClientConfig());
+            client.setFollowRedirects(true);
+            service = client.resource(serviceURL.toString());
+            initialized.set(true);
+            logger.info("Successfully initialized the waveform index viewer");
+        }
 
         // fetch the files
-        String info = service.path(INFO)
-                .accept(MediaType.APPLICATION_JSON)
-                .get(String.class);
+        //String info = service.path(INFO)
+        //        .accept(MediaType.APPLICATION_JSON)
+        //        .get(String.class);
 
-        logger.info("Successfully created a client to the waveform index service: " + info);
+        //logger.info("Successfully created a client to the waveform index service: " + info);
 
         // configure the table
         name.setCellValueFactory(new PropertyValueFactory<WaveformIndex, String>("file"));
