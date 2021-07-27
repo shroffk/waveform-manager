@@ -2,13 +2,17 @@ package org.phoebus.services.waveform.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.epics.waveform.index.util.entity.Event;
 import org.epics.waveform.index.util.entity.WaveformFileAttribute;
 import org.epics.waveform.index.util.entity.WaveformFilePVProperty;
 import org.epics.waveform.index.util.entity.WaveformFileProperty;
@@ -41,7 +45,7 @@ public class WaveformIndexRepositoryIT {
 
     @Test
     public void createWaveformIndex() throws IOException {
-        File file = new File("test_file.h5");
+//        File file = new File("test_file.h5");
         WaveformIndex index = new WaveformIndex(file.toURI());
         // Create a simple waveform index with only a file
         WaveformIndex createdIndex = waveformIndexRepository.save(index);
@@ -57,9 +61,11 @@ public class WaveformIndexRepositoryIT {
          * Create a waveform index with a property
          */
         WaveformFileProperty fileProperty = new WaveformFileProperty("propertyName");
-        fileProperty.setAttributes(List.of(new WaveformFileAttribute("attribute1", "value"),
-                new WaveformFileAttribute("attribute2", "value")));
-        index.setProperties(List.of(fileProperty));
+        fileProperty.setAttributes(Arrays.asList(new WaveformFileAttribute("attribute1", "value"),
+                                                 new WaveformFileAttribute("attribute2", "value")));
+        List<WaveformFileProperty> properties =  new ArrayList<>();
+        properties.add(fileProperty);
+        index.setProperties(properties);
         createdIndex = waveformIndexRepository.save(index);
 
         Assert.assertThat(createdIndex, new CustomTypeSafeMatcher<WaveformIndex>("Expected Index to be created with property ") {
@@ -74,7 +80,7 @@ public class WaveformIndexRepositoryIT {
          * Create a waveform index with a tag
          */
         WaveformFileTag fileTag = new WaveformFileTag("tag");
-        index.setTags(List.of(fileTag));
+        index.setTags(Arrays.asList(fileTag));
         createdIndex = waveformIndexRepository.save(index);
 
         ObjectMapper mapper = new ObjectMapper();
@@ -91,9 +97,9 @@ public class WaveformIndexRepositoryIT {
          * Create a waveform index with pv properties
          */
         WaveformFilePVProperty filePvProperties = new WaveformFilePVProperty("sim://testPV");
-        filePvProperties.setAttributes(Set.of(new WaveformFileAttribute("pvAttribute1", "value"),
-                                               new WaveformFileAttribute("pvAttribute2", "value")));
-        index.setPvProperties(List.of(filePvProperties));
+        filePvProperties.setAttributes(new HashSet<>() {{ add(new WaveformFileAttribute("pvAttribute1", "value"));
+                                                          add(new WaveformFileAttribute("pvAttribute2", "value")); }});
+        index.setPvProperties(Arrays.asList(filePvProperties));
 
         createdIndex = waveformIndexRepository.save(index);
 
@@ -105,6 +111,25 @@ public class WaveformIndexRepositoryIT {
             }
         });
 
+        /*
+         * Create a waveform index with events
+         */
+        Event start = new Event("start", Instant.EPOCH);
+        Event end = new Event("end", Instant.now());
+        index.setEvents(Arrays.asList(start, end));
+
+        createdIndex = waveformIndexRepository.save(index);
+
+        Assert.assertThat(createdIndex, new CustomTypeSafeMatcher<WaveformIndex>("Expected Index to be created with events ") {
+            @Override
+            protected boolean matchesSafely(WaveformIndex item) {
+                boolean found = item.getEvents().contains(start);
+                boolean match = item.getFile().equals(file.toURI())
+                        && item.getEvents().contains(start);
+                return item.getFile().equals(file.toURI())
+                        && item.getEvents().contains(start);
+            }
+        });
         waveformIndexRepository.delete(index);
 
     }
@@ -132,8 +157,8 @@ public class WaveformIndexRepositoryIT {
         WaveformIndex createdIndex = waveformIndexRepository.save(index);
 
         WaveformFileProperty fileProperty = new WaveformFileProperty("addPropertyName");
-        fileProperty.setAttributes(List.of(new WaveformFileAttribute("attribute1", "value"),
-                                           new WaveformFileAttribute("attribute2", "value")));
+        fileProperty.setAttributes(Arrays.asList(new WaveformFileAttribute("attribute1", "value"),
+                                                 new WaveformFileAttribute("attribute2", "value")));
         WaveformIndex updatedIndex = waveformIndexRepository.addProperty(createdIndex, fileProperty);
         Assert.assertThat(updatedIndex, new CustomTypeSafeMatcher<WaveformIndex>("Expected Index to be created with property ") {
             @Override

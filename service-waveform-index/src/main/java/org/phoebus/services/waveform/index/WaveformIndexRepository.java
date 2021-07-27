@@ -38,6 +38,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -53,6 +56,7 @@ import static org.phoebus.services.waveform.index.WaveformIndexService.*;
 import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
+import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 
 @Repository
 public class WaveformIndexRepository {
@@ -69,6 +73,8 @@ public class WaveformIndexRepository {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    final private static String MILLI_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS";
+    final public static DateTimeFormatter MILLI_FORMAT = DateTimeFormatter.ofPattern(MILLI_PATTERN).withZone(ZoneId.systemDefault());
 
     private static ServiceLoader<ProcessWaveformIndex> loader;
     static {
@@ -116,6 +122,9 @@ public class WaveformIndexRepository {
      * @return list of {@link WaveformIndex}s which match the search parameters
      */
     public List<WaveformIndex> search(MultiValueMap<String, String> searchParameters) {
+        boolean temporalSearch = false;
+        Instant start = Instant.EPOCH;
+        Instant end = Instant.now();
 
         SearchRequest searchRequest = new SearchRequest(ES_WF_INDEX+"*");
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -145,8 +154,48 @@ public class WaveformIndexRepository {
                         }
                         boolQuery.must(nestedQuery("tags", tagQuery, ScoreMode.None));
                         break;
+                    case "start":
+                        // If there are multiple start times submitted select the earliest
+                        Instant earliestStartTime = Instant.now();
+                        for (String value : parameter.getValue())
+                        {
+                            Instant time = Instant.from(MILLI_FORMAT.parse(value));
+                            earliestStartTime = earliestStartTime.isBefore(time) ? earliestStartTime : time;
+                        }
+                        temporalSearch = true;
+                        start = earliestStartTime;
+                        break;
+                    case "end":
+                        // If there are multiple end times submitted select the latest
+                        Instant latestEndTime = Instant.MIN;
+                        for (String value : parameter.getValue())
+                        {
+                            Instant time = Instant.from(MILLI_FORMAT.parse(value));
+                            latestEndTime = latestEndTime.isBefore(time) ? time : latestEndTime;
+                        }
+                        temporalSearch = true;
+                        end = latestEndTime;
+                        break;
+                    default:
+                        break;
                 }
+            }
 
+            // Add the temporal queries
+            if(temporalSearch)
+            {
+                // check that the start is before the end
+                if (start.isBefore(end))
+                {
+                        DisMaxQueryBuilder temporalQuery = disMaxQuery();
+                        // Add a query based on the create time
+                        temporalQuery.add(rangeQuery("createdDate").from(start.toEpochMilli()).to(end.toEpochMilli()));
+                        // Add a query based on the time of the associated events
+                        temporalQuery.add(nestedQuery("events",
+                                rangeQuery("events.instant").from(start.toEpochMilli()).to(end.toEpochMilli()),
+                                ScoreMode.None));
+                        boolQuery.must(temporalQuery);
+                }
             }
 
             searchSourceBuilder.query(boolQuery);

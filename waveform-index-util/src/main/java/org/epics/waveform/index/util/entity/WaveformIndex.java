@@ -3,12 +3,10 @@ package org.epics.waveform.index.util.entity;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 /**
  * A class representing an index for a waveform file and its associated tags and properties.
  */
@@ -22,6 +20,9 @@ public class WaveformIndex {
     private List<WaveformFileProperty> properties = Collections.emptyList();
     // The list of pv properties
     private List<WaveformFilePVProperty> pvProperties = Collections.emptyList();
+
+    // The list of time events
+    private List<Event> events;
 
     /**
      * Default constructor for Object Mapping
@@ -122,6 +123,14 @@ public class WaveformIndex {
         setPvProperties(this.pvProperties.stream().filter(p -> {
             return !p.getPvName().equalsIgnoreCase(pvProperty);
         }).collect(Collectors.toList()));
+    }
+
+    public List<Event> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<Event> events) {
+        this.events = events;
     }
 
     @Override

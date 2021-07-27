@@ -7,6 +7,18 @@
       "type": "date",
       "format": "epoch_millis||yyyy-MM-dd HH:mm:ss.SSS"
     },
+    "events": {
+      "type": "nested",
+      "properties": {
+        "name": {
+          "type": "keyword"
+        },
+        "event": {
+          "type": "date",
+          "format": "epoch_millis||yyyy-MM-dd HH:mm:ss.SSS"
+        }
+      }
+    },
     "tags": {
       "type": "nested",
       "properties": {
