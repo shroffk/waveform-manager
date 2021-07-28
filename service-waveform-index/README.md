@@ -29,6 +29,23 @@ Run the service using
 Note: make sure that elastic is running and the JAVA_HOME is correctly configured and added to the PATH
 ### Service API
 
+#### Search for file Index
+```
+GET /waveformIndex/search
+Accept: application/json
+Content-Type: application/json
+
+RESPONSE: HTTP 200
+Content: paginated list 
+```
+
+| Search Keyword | Description |
+| ---            | ---        |
+| file   | Find files with names matching the search pattern |
+| tags   | Find files with tag names matching the search pattern |
+| start  | Find files with create date or events after the start instant |
+| end    | Find files with create date or events before the end instant |
+
 #### Create a new Index Entry
 
 ```
@@ -59,9 +76,17 @@ Content-Type: application/json
       }
    ],
    "pvProperties":[
-
+       {
+           "pvName": "ca://SR:C30",
+           "attributes":[
+               {
+                   "name": "trigger",
+                   "value": "true"
+               }
+           ]
+       }
    ],
-    "events": [
+    "events":[
         {
             "name": "start",
             "instant": 0
@@ -74,7 +99,6 @@ Content-Type: application/json
 }
 
 RESPONSE: HTTP 201 (Created)
-Location header: http://localhost:8090/example/v1/hotels/1
 ```
 
 #### Retrieve an Index
