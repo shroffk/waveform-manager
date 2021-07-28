@@ -8,7 +8,11 @@ The HDF File format supported is as follows.
 
 A simple indexing service which allows the addition of tags and properties to a list of hdf waveform files.
 
-## Viewer
+## Index Viewer
+
+A simple application to search for indexed files from the Index Service
+
+## Waveform Viewer
 
 A graphic user interface to view the waveform from the hdf files.
 
