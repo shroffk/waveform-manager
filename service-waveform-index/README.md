@@ -7,7 +7,27 @@ The tags and properties which can be added by users can be used to
 facilitate quering for files and storing additional metata data not 
 included in the hdf file.
 
-### services API
+### Build and Installation
+
+**Download and install elastic**   
+Download and install elasticsearch (verision 6.8.4) from [elastic.com](https://www.elastic.co/downloads/past-releases/elasticsearch-6-8-4)
+
+**Configure**  
+You can configure the file processor which are to be included or excluded from your service
+by updating the service `pom.xml`.  
+
+The service http port and the connection details for the elastic backend are configurable via the 
+applications.properties located under `/src/main/resources/applications.properties`
+
+**Build**  
+Follow build instruction for the waveform-manager packages  [here](https://github.com/shroffk/waveform-manager#build)
+
+**Run**  
+Run the service using
+```java -jar target/service-waveform-index-4.6.6.jar```
+
+Note: make sure that elastic is running and the JAVA_HOME is correctly configured and added to the PATH
+### Service API
 
 #### Create a new Index Entry
 
@@ -40,7 +60,17 @@ Content-Type: application/json
    ],
    "pvProperties":[
 
-   ]
+   ],
+    "events": [
+        {
+            "name": "start",
+            "instant": 0
+        },
+        {
+            "name": "end",
+            "instant": 1627417760994
+        }
+    ]
 }
 
 RESPONSE: HTTP 201 (Created)

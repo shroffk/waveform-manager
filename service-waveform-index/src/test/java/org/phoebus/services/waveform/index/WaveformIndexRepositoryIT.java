@@ -123,9 +123,6 @@ public class WaveformIndexRepositoryIT {
         Assert.assertThat(createdIndex, new CustomTypeSafeMatcher<WaveformIndex>("Expected Index to be created with events ") {
             @Override
             protected boolean matchesSafely(WaveformIndex item) {
-                boolean found = item.getEvents().contains(start);
-                boolean match = item.getFile().equals(file.toURI())
-                        && item.getEvents().contains(start);
                 return item.getFile().equals(file.toURI())
                         && item.getEvents().contains(start);
             }
