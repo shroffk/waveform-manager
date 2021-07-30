@@ -38,13 +38,17 @@ Content-Type: application/json
 RESPONSE: HTTP 200
 Content: paginated list 
 ```
+| Search Keyword  | Usage | Description |  
+|-----------------|-------|------|
+| file           | file=*file_name*\* | Find files with names matching the search pattern |  
+| tags           | tags=*tag_name*\* | Find files with tag names matching the search pattern |  
+| start          |                  | Find files with create date or events after the start instant |  
+| end            |                  | Find files with create date or events before the end instant |   
+| **Property Search** |
+| properties|properties=propertyName\* | Find files with properties matching in the pattern|  
+| |properties=propertyName\*.attributeName\* |  Find files with properties and attributes matching in the pattern|  
+| |properties=propertyName\*.attributeName\*.attributeValue\* |  Find files with properties and attributes with values matching in the pattern|
 
-| Search Keyword | Description |
-| ---            | ---        |
-| file   | Find files with names matching the search pattern |
-| tags   | Find files with tag names matching the search pattern |
-| start  | Find files with create date or events after the start instant |
-| end    | Find files with create date or events before the end instant |
 
 #### Create a new Index Entry
 

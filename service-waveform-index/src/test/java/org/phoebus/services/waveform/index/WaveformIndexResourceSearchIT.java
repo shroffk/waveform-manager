@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.TestExecutionListener;
 import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.util.LinkedMultiValueMap;
@@ -38,6 +39,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = WaveformIndexService.class)
 @TestExecutionListeners(listeners = {WaveformIndexResourceSearchIT.class})
+@TestPropertySource(locations = "classpath:test_application.properties")
 @WebAppConfiguration
 public class WaveformIndexResourceSearchIT implements TestExecutionListener {
 
