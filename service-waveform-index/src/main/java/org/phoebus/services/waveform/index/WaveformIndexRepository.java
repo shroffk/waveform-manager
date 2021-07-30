@@ -42,6 +42,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +58,7 @@ import static org.elasticsearch.index.query.QueryBuilders.disMaxQuery;
 import static org.elasticsearch.index.query.QueryBuilders.nestedQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 
 @Repository
 public class WaveformIndexRepository {
@@ -137,6 +139,7 @@ public class WaveformIndexRepository {
             {
                 switch (parameter.getKey().strip().toLowerCase()) {
                     case "file":
+                    case "files":
                         DisMaxQueryBuilder fileQuery = disMaxQuery();
                         for (String value : parameter.getValue()) {
                             for (String pattern : value.split("[\\|,;]")) {
@@ -145,6 +148,7 @@ public class WaveformIndexRepository {
                         }
                         boolQuery.must(fileQuery);
                         break;
+                    case "tag":
                     case "tags":
                         DisMaxQueryBuilder tagQuery = disMaxQuery();
                         for (String value : parameter.getValue()) {
@@ -175,6 +179,34 @@ public class WaveformIndexRepository {
                         }
                         temporalSearch = true;
                         end = latestEndTime;
+                        break;
+                    case "property":
+                    case "properties":
+                        DisMaxQueryBuilder propertyQuery = disMaxQuery();
+                        for (String value : parameter.getValue()) {
+                            for (String pattern : value.split("[\\|,;]")) {
+                                String[] propertySearchFields;
+                                propertySearchFields = Arrays.copyOf(pattern.split("\\."), 3);
+
+                                BoolQueryBuilder bq = boolQuery();
+                                if (propertySearchFields[0] != null && !propertySearchFields[0].isEmpty())
+                                {
+                                    bq.must(wildcardQuery("properties.name", propertySearchFields[0].trim()));
+                                }
+                                if (propertySearchFields[1] != null && !propertySearchFields[1].isEmpty())
+                                {
+                                    bq.must(nestedQuery("properties.attributes",
+                                            wildcardQuery("properties.attributes.name", propertySearchFields[1].trim()), ScoreMode.None));
+                                }
+                                if (propertySearchFields[2] != null && !propertySearchFields[2].isEmpty())
+                                {
+                                    bq.must(nestedQuery("properties.attributes",
+                                            wildcardQuery("properties.attributes.value", propertySearchFields[2].trim()), ScoreMode.None));
+                                }
+                                propertyQuery.add(nestedQuery("properties", bq, ScoreMode.None));
+                            }
+                        }
+                        boolQuery.must(propertyQuery);
                         break;
                     default:
                         break;
