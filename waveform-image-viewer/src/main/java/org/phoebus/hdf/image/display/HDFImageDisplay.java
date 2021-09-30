@@ -21,7 +21,8 @@ public class HDFImageDisplay implements AppInstance {
         this.app = app;
         try {
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(this.getClass().getResource("org/phoebus/hdf/image/display/HDFImageDisplay.fxml"));
+            Object test = this.getClass().getResource("HDFImageDisplay.fxml");
+            loader.setLocation(this.getClass().getResource("HDFImageDisplay.fxml"));
             loader.load();
 
             controller = loader.getController();

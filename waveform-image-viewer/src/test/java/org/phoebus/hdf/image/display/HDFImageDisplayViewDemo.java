@@ -19,7 +19,7 @@ public class HDFImageDisplayViewDemo extends ApplicationWrapper {
     }
 
     //TODO need to make a reasonably sized test file and include it in the test resources
-    private static String FILE = "C:\\HDF_Group\\HDF_files\\bsa-demo.h5";
+    private static String FILE = "C:\\HDF_Group\\HDF_files\\hdf-image-demo.h5";
 
     @Override
     public void start(Stage stage) throws Exception {
